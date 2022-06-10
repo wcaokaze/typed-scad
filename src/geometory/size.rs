@@ -1,8 +1,8 @@
 use std::fmt::{self, Display, Formatter};
 use std::iter::Sum;
 use std::ops::{
-    Add, AddAssign, Bound, Div, Mul, Neg, Range, RangeBounds, RangeFrom,
-    RangeInclusive, Sub
+    Add, AddAssign, Bound, Div, DivAssign, Mul, MulAssign, Neg, Range,
+    RangeBounds, RangeFrom, RangeInclusive, Sub, SubAssign
 };
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, PartialOrd)]
@@ -36,14 +36,32 @@ impl Sub for Size {
     fn sub(self, rhs: Size) -> Size { Size(self.0 - rhs.0) }
 }
 
+impl SubAssign for Size {
+    fn sub_assign(&mut self, rhs: Size) {
+        *self = *self - rhs;
+    }
+}
+
 impl<Rhs> Mul<Rhs> for Size where Rhs: Into<f64> {
     type Output = Size;
     fn mul(self, rhs: Rhs) -> Size { Size(self.0 * rhs.into()) }
 }
 
+impl<Rhs> MulAssign<Rhs> for Size where Rhs: Into<f64> {
+    fn mul_assign(&mut self, rhs: Rhs) {
+        *self = *self * rhs;
+    }
+}
+
 impl<Rhs> Div<Rhs> for Size where Rhs: Into<f64> {
     type Output = Size;
     fn div(self, rhs: Rhs) -> Size { Size(self.0 / rhs.into()) }
+}
+
+impl<Rhs> DivAssign<Rhs> for Size where Rhs: Into<f64> {
+    fn div_assign(&mut self, rhs: Rhs) {
+        *self = *self / rhs;
+    }
 }
 
 impl Div for Size {
