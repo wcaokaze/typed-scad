@@ -25,6 +25,11 @@ use std::ops::{
 pub struct Size(f64);
 
 impl Size {
+    /// Converts this size to a f64 value as millimeter
+    pub fn to_millimeter(&self) -> f64 {
+        self.0
+    }
+
     /// Prepare to iterate [Size]s in the specified range.
     /// And [step](IterableSizeRange::step) returns an [Iterator] for Size.
     ///
@@ -155,6 +160,11 @@ mod tests {
         assert_eq!(42.cm(), Size(420.0));
         assert_eq!(42.0.mm(), Size(42.0));
         assert_eq!(42.0.cm(), Size(420.0));
+    }
+
+    #[test]
+    fn to_millimeter() {
+        assert_eq!(Size(42.0).to_millimeter(), 42.0);
     }
 
     #[test]
