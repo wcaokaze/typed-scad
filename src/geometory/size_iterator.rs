@@ -17,8 +17,8 @@ impl SizeIterator {
 
         SizeIterator {
             next: if is_iterable { Some(start_value) } else { None },
-            step: step,
-            end_bound: end_bound
+            step,
+            end_bound
         }
     }
 
