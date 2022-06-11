@@ -4,10 +4,42 @@ use std::ops::{
     Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign
 };
 
+/// Size of something.
+///
+/// We must specify a unit to use Size.
+/// And, to use `mm()`, we must `use SizeLiteral`.
+/// ```
+/// use typed_scad::geometory::{Size, SizeLiteral};
+/// let size: Size = 1.mm();
+/// ```
+///
+/// Basic operators are available for Size.
+/// ```
+/// # use typed_scad::geometory::SizeLiteral;
+/// assert_eq!(1.mm() + 2.mm(), 3.mm());
+/// assert_eq!(1.mm() * 2, 2.mm());
+/// assert_eq!(2.mm() / 2, 1.mm());
+/// assert_eq!(4.mm() / 2.mm(), 2.0);
+/// ```
 #[derive(Clone, Copy, Debug, Default, PartialEq, PartialOrd)]
 pub struct Size(f64);
 
 impl Size {
+    /// Prepare to iterate [Size]s in the specified range.
+    /// And [step](IterableSizeRange::step) returns an [Iterator] for Size.
+    ///
+    /// ```
+    /// # use typed_scad::geometory::{IterableSizeRange, Size, SizeLiteral};
+    /// let iter = Size::iterate(0.mm()..=3.mm()).step(1.mm());
+    /// assert_eq!(iter.collect::<Vec<_>>(), vec![0.mm(), 1.mm(), 2.mm(), 3.mm()]);
+    /// ```
+    ///
+    /// Negative steps are also available.
+    /// ```
+    /// # use typed_scad::geometory::{IterableSizeRange, Size, SizeLiteral};
+    /// let iter = Size::iterate(3.mm()..=0.mm()).step(-1.mm());
+    /// assert_eq!(iter.collect::<Vec<_>>(), vec![3.mm(), 2.mm(), 1.mm(), 0.mm()]);
+    /// ```
     pub fn iterate<R>(size_range: R) -> R where R: IterableSizeRange {
         size_range
     }
@@ -73,6 +105,14 @@ impl Neg for Size {
     fn neg(self) -> Size { Size(-self.0) }
 }
 
+/// Type that can make [Size] with `mm()` postfix.
+///
+/// Rust's primitive numbers are SizeLiteral.
+/// ```
+/// # use typed_scad::geometory::SizeLiteral;
+/// 1.mm();
+/// 2.0.mm();
+/// ```
 pub trait SizeLiteral {
     fn mm(self) -> Size;
     fn cm(self) -> Size;

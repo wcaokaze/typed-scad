@@ -1,1 +1,1 @@
-mod geometory;
+pub mod geometory;

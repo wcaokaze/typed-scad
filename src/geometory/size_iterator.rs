@@ -2,6 +2,7 @@ use super::{Size, SizeLiteral};
 use std::iter::Sum;
 use std::ops::{Bound, Range, RangeBounds, RangeFrom, RangeInclusive};
 
+/// An [Iterator] for [Size].
 pub struct SizeIterator {
     next: Option<Size>,
     step: Size,
@@ -58,6 +59,12 @@ impl Iterator for SizeIterator {
     }
 }
 
+/// Range that can iterate with [Size::iterate].
+///
+/// The follow 3 range types are iterable.
+/// - [Range] `0.mm()..3.mm()`
+/// - [RangeInclusive] `0.mm()..=3.mm()`
+/// - [RangeFrom] `0.mm()..`
 pub trait IterableSizeRange: RangeBounds<Size> {
     fn start_value(&self) -> Size;
 
