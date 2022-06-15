@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use super::IterableSizeRange;
 use std::fmt::{self, Display, Formatter};
 use std::ops::{
@@ -21,7 +22,16 @@ use std::ops::{
 /// assert_eq!(2.mm() / 2, 1.mm());
 /// assert_eq!(4.mm() / 2.mm(), 2.0);
 /// ```
-#[derive(Clone, Copy, Debug, Default, PartialEq, PartialOrd)]
+///
+/// ## Note
+/// Size implements PartialEq and PartialOrd.
+/// They allows float-point arithmetic errors.
+/// ```
+/// # use typed_scad::geometory::SizeLiteral;
+/// assert_ne!(0.1 * 3.0, 0.3);
+/// assert_eq!(0.1.mm() * 3, 0.3.mm());
+/// ```
+#[derive(Clone, Copy, Debug, Default)]
 pub struct Size(f64);
 
 impl Size {
@@ -53,6 +63,25 @@ impl Size {
 impl Display for Size {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         f.write_fmt(format_args!("{}mm", self.0))
+    }
+}
+
+const D: f64 = 1e-10;
+
+impl PartialOrd for Size {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        match (self.0 < other.0 - D, self.0 > other.0 + D) {
+            (false, false) => None,
+            (false,  true) => Some(Ordering::Greater),
+            ( true, false) => Some(Ordering::Less),
+            ( true,  true) => Some(Ordering::Equal)
+        }
+    }
+}
+
+impl PartialEq for Size {
+    fn eq(&self, other: &Self) -> bool {
+        self.0 > other.0 - D && self.0 < other.0 + D
     }
 }
 
@@ -123,16 +152,13 @@ pub trait SizeLiteral {
     fn cm(self) -> Size;
 }
 
-impl<T> SizeLiteral for T
-    where T: Into<f64> + From<i32> + Mul<T>,
-          T::Output: Into<f64>
-{
+impl<T> SizeLiteral for T where T: Into<f64> {
     fn mm(self) -> Size {
         Size(self.into())
     }
 
     fn cm(self) -> Size {
-        Size((self * From::from(10)).into())
+        Size(self.into() * 10.0)
     }
 }
 
@@ -144,6 +170,9 @@ mod tests {
     fn eq() {
         assert_eq!(Size(42.0), Size(42.0));
         assert_ne!(Size(42.0), Size(43.0));
+
+        assert_ne!(     42.0,       42.0 + 1e-12);
+        assert_eq!(Size(42.0), Size(42.0 + 1e-12));
     }
 
     #[test]
