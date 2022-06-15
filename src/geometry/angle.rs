@@ -10,13 +10,13 @@ use std::ops::{
 /// We must specify a unit to use Angle.
 /// And, to use `deg()`, we must `use AngleLiteral`.
 /// ```
-/// use typed_scad::geometory::{Angle, AngleLiteral};
+/// use typed_scad::geometry::{Angle, AngleLiteral};
 /// let angle: Angle = 90.deg();
 /// ```
 ///
 /// Basic operators are available for Angle.
 /// ```
-/// # use typed_scad::geometory::AngleLiteral;
+/// # use typed_scad::geometry::AngleLiteral;
 /// assert_eq!(1.deg() + 2.deg(), 3.deg());
 /// assert_eq!(1.deg() * 2, 2.deg());
 /// assert_eq!(2.deg() / 2, 1.deg());
@@ -28,7 +28,7 @@ use std::ops::{
 /// They allows float-point arithmetic errors.
 /// ```
 /// # use std::f64::consts::PI;
-/// # use typed_scad::geometory::AngleLiteral;
+/// # use typed_scad::geometry::AngleLiteral;
 /// assert_ne!(
 ///     PI + 1.0_f64.to_radians(),
 ///     181.0_f64.to_radians()
@@ -42,7 +42,7 @@ use std::ops::{
 ///
 /// And also note that they don't consider circling.
 /// ```
-/// # use typed_scad::geometory::AngleLiteral;
+/// # use typed_scad::geometry::AngleLiteral;
 /// assert_ne!(0.deg(), 360.deg());
 /// ```
 #[derive(Clone, Copy, Debug, Default)]
@@ -63,14 +63,14 @@ impl Angle {
     /// And [step][IterableAngleRange::step] returns an [Iterator] for Angle.
     ///
     /// ```
-    /// # use typed_scad::geometory::{Angle, AngleLiteral, IterableAngleRange};
+    /// # use typed_scad::geometry::{Angle, AngleLiteral, IterableAngleRange};
     /// let iter = Angle::iterate(0.deg()..=3.deg()).step(1.deg());
     /// assert_eq!(iter.collect::<Vec<_>>(), vec![0.deg(), 1.deg(), 2.deg(), 3.deg()]);
     /// ```
     ///
     /// Negative steps are also available.
     /// ```
-    /// # use typed_scad::geometory::{Angle, AngleLiteral, IterableAngleRange};
+    /// # use typed_scad::geometry::{Angle, AngleLiteral, IterableAngleRange};
     /// let iter = Angle::iterate(3.deg()..=0.deg()).step(-1.deg());
     /// assert_eq!(iter.collect::<Vec<_>>(), vec![3.deg(), 2.deg(), 1.deg(), 0.deg()]);
     /// ```
@@ -162,7 +162,7 @@ impl Neg for Angle {
 ///
 /// Rust's primitive numbers are AngleLiteral.
 /// ```
-/// # use typed_scad::geometory::AngleLiteral;
+/// # use typed_scad::geometry::AngleLiteral;
 /// 1.deg();
 /// 2.0.deg();
 /// ```

@@ -10,13 +10,13 @@ use std::ops::{
 /// We must specify a unit to use Size.
 /// And, to use `mm()`, we must `use SizeLiteral`.
 /// ```
-/// use typed_scad::geometory::{Size, SizeLiteral};
+/// use typed_scad::geometry::{Size, SizeLiteral};
 /// let size: Size = 1.mm();
 /// ```
 ///
 /// Basic operators are available for Size.
 /// ```
-/// # use typed_scad::geometory::SizeLiteral;
+/// # use typed_scad::geometry::SizeLiteral;
 /// assert_eq!(1.mm() + 2.mm(), 3.mm());
 /// assert_eq!(1.mm() * 2, 2.mm());
 /// assert_eq!(2.mm() / 2, 1.mm());
@@ -27,7 +27,7 @@ use std::ops::{
 /// Size implements PartialEq and PartialOrd.
 /// They allows float-point arithmetic errors.
 /// ```
-/// # use typed_scad::geometory::SizeLiteral;
+/// # use typed_scad::geometry::SizeLiteral;
 /// assert_ne!(0.1 * 3.0, 0.3);
 /// assert_eq!(0.1.mm() * 3, 0.3.mm());
 /// ```
@@ -44,14 +44,14 @@ impl Size {
     /// And [step](IterableSizeRange::step) returns an [Iterator] for Size.
     ///
     /// ```
-    /// # use typed_scad::geometory::{IterableSizeRange, Size, SizeLiteral};
+    /// # use typed_scad::geometry::{IterableSizeRange, Size, SizeLiteral};
     /// let iter = Size::iterate(0.mm()..=3.mm()).step(1.mm());
     /// assert_eq!(iter.collect::<Vec<_>>(), vec![0.mm(), 1.mm(), 2.mm(), 3.mm()]);
     /// ```
     ///
     /// Negative steps are also available.
     /// ```
-    /// # use typed_scad::geometory::{IterableSizeRange, Size, SizeLiteral};
+    /// # use typed_scad::geometry::{IterableSizeRange, Size, SizeLiteral};
     /// let iter = Size::iterate(3.mm()..=0.mm()).step(-1.mm());
     /// assert_eq!(iter.collect::<Vec<_>>(), vec![3.mm(), 2.mm(), 1.mm(), 0.mm()]);
     /// ```
@@ -143,7 +143,7 @@ impl Neg for Size {
 ///
 /// Rust's primitive numbers are SizeLiteral.
 /// ```
-/// # use typed_scad::geometory::SizeLiteral;
+/// # use typed_scad::geometry::SizeLiteral;
 /// 1.mm();
 /// 2.0.mm();
 /// ```
