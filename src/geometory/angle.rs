@@ -89,7 +89,7 @@ const D: f64 = 1e-10;
 
 impl PartialOrd for Angle {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        match (self.0 < other.0 - D, self.0 > other.0 + D) {
+        match (self.0 < other.0 + D, self.0 > other.0 - D) {
             (false, false) => None,
             (false,  true) => Some(Ordering::Greater),
             ( true, false) => Some(Ordering::Less),
@@ -184,6 +184,7 @@ impl<T> AngleLiteral for T where T: Into<f64> {
 #[cfg(test)]
 mod tests {
     use super::{Angle, AngleLiteral};
+    use std::cmp::Ordering;
     use std::f64::consts::PI;
 
     #[test]
@@ -193,6 +194,8 @@ mod tests {
 
         assert_ne!(      0.42,        0.42 + 1e-12);
         assert_eq!(Angle(0.42), Angle(0.42 + 1e-12));
+        assert_ne!(      0.42,        0.42 - 1e-12);
+        assert_eq!(Angle(0.42), Angle(0.42 - 1e-12));
 
         assert_ne!(Angle(0.42), Angle(0.42 + 2.0 * PI));
     }
@@ -264,5 +267,30 @@ mod tests {
         assert!(Angle(0.42) > Angle(0.41));
         assert!(Angle(0.41) < Angle(0.42));
         assert!(Angle(0.42) < Angle(0.42 + 2.0 * PI));
+
+        assert_eq!(
+            Angle(0.42).partial_cmp(&Angle(f64::NAN)),
+            None
+        );
+        assert_eq!(
+            Angle(f64::NAN).partial_cmp(&Angle(0.42)),
+            None
+        );
+        assert_eq!(
+            Angle(f64::NAN).partial_cmp(&Angle(f64::NAN)),
+            None
+        );
+        assert_eq!(
+            Angle(0.42).partial_cmp(&Angle(0.42)),
+            Some(Ordering::Equal)
+        );
+        assert_eq!(
+            Angle(0.42).partial_cmp(&Angle(0.42 + 1e-12)),
+            Some(Ordering::Equal)
+        );
+        assert_eq!(
+            Angle(0.42).partial_cmp(&Angle(0.42 - 1e-12)),
+            Some(Ordering::Equal)
+        );
     }
 }

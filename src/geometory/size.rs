@@ -70,7 +70,7 @@ const D: f64 = 1e-10;
 
 impl PartialOrd for Size {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        match (self.0 < other.0 - D, self.0 > other.0 + D) {
+        match (self.0 < other.0 + D, self.0 > other.0 - D) {
             (false, false) => None,
             (false,  true) => Some(Ordering::Greater),
             ( true, false) => Some(Ordering::Less),
@@ -165,6 +165,7 @@ impl<T> SizeLiteral for T where T: Into<f64> {
 #[cfg(test)]
 mod tests {
     use super::{Size, SizeLiteral};
+    use std::cmp::Ordering;
 
     #[test]
     fn eq() {
@@ -173,6 +174,8 @@ mod tests {
 
         assert_ne!(     42.0,       42.0 + 1e-12);
         assert_eq!(Size(42.0), Size(42.0 + 1e-12));
+        assert_ne!(     42.0,       42.0 - 1e-12);
+        assert_eq!(Size(42.0), Size(42.0 - 1e-12));
     }
 
     #[test]
@@ -235,5 +238,30 @@ mod tests {
 
         assert!(Size(42.0) > Size(41.0));
         assert!(Size(41.0) < Size(42.0));
+
+        assert_eq!(
+            Size(42.0).partial_cmp(&Size(f64::NAN)),
+            None
+        );
+        assert_eq!(
+            Size(f64::NAN).partial_cmp(&Size(42.0)),
+            None
+        );
+        assert_eq!(
+            Size(f64::NAN).partial_cmp(&Size(f64::NAN)),
+            None
+        );
+        assert_eq!(
+            Size(42.0).partial_cmp(&Size(42.0)),
+            Some(Ordering::Equal)
+        );
+        assert_eq!(
+            Size(42.0).partial_cmp(&Size(42.0 + 1e-12)),
+            Some(Ordering::Equal)
+        );
+        assert_eq!(
+            Size(42.0).partial_cmp(&Size(42.0 - 1e-12)),
+            Some(Ordering::Equal)
+        );
     }
 }

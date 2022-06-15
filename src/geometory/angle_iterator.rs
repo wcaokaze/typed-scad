@@ -33,17 +33,11 @@ impl AngleIterator {
         step: Angle
     ) -> bool {
         match end_bound {
-            Bound::Included(end) => Self::is_not_ended(value, end + step / 16, step),
-            Bound::Excluded(end) => Self::is_not_ended(value, end,             step),
+            Bound::Included(end) =>
+                if step > 0.rad() { value <= end } else { value >= end },
+            Bound::Excluded(end) =>
+                if step > 0.rad() { value <  end } else { value >  end },
             Bound::Unbounded => true
-        }
-    }
-
-    fn is_not_ended(value: Angle, end_value: Angle, step: Angle) -> bool {
-        if step > 0.rad() {
-            value < end_value
-        } else {
-            value > end_value
         }
     }
 }
