@@ -1,5 +1,5 @@
 use std::cmp::Ordering;
-use super::IterableAngleRange;
+use super::{IterableAngleRange, Size};
 use std::fmt::{self, Display, Formatter};
 use std::ops::{
    Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign
@@ -57,6 +57,34 @@ impl Angle {
    /// Converts this angle to a f64 value as degree
    pub fn to_degree(&self) -> f64 {
       self.0.to_degrees()
+   }
+
+   fn sin(self) -> f64 {
+      self.0.sin()
+   }
+
+   fn cos(self) -> f64 {
+      self.0.cos()
+   }
+
+   fn tan(self) -> f64 {
+      self.0.tan()
+   }
+
+   fn asin(a: f64) -> Angle {
+      Angle(f64::asin(a))
+   }
+
+   fn acos(a: f64) -> Angle {
+      Angle(f64::acos(a))
+   }
+
+   fn atan(a: f64) -> Angle {
+      Angle(f64::atan(a))
+   }
+
+   fn atan2(y: Size, x: Size) -> Angle {
+      Angle(f64::atan2(y.to_millimeter(), x.to_millimeter()))
    }
 
    /// Prepare to iterate [Angle]s in the specified range.
