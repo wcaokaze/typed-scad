@@ -71,6 +71,10 @@ impl Angle {
       self.0.tan()
    }
 
+   fn sin_cos(self) -> (f64, f64) {
+      self.0.sin_cos()
+   }
+
    fn asin(a: f64) -> Angle {
       Angle(f64::asin(a))
    }
@@ -85,6 +89,14 @@ impl Angle {
 
    fn atan2(y: Size, x: Size) -> Angle {
       Angle(f64::atan2(y.to_millimeter(), x.to_millimeter()))
+   }
+
+   fn abs(self) -> Angle {
+      Angle(self.0.abs())
+   }
+
+   fn clamp(self, min: Angle, max: Angle) -> Angle {
+      Angle(self.0.clamp(min.0, max.0))
    }
 
    /// Prepare to iterate [Angle]s in the specified range.

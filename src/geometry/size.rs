@@ -58,6 +58,14 @@ impl Size {
    pub fn iterate<R>(size_range: R) -> R where R: IterableSizeRange {
       size_range
    }
+
+   fn abs(self) -> Size {
+      Size(self.0.abs())
+   }
+
+   fn clamp(self, min: Size, max: Size) -> Size {
+      Size(self.0.clamp(min.0, max.0))
+   }
 }
 
 impl Display for Size {
