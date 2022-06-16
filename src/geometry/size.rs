@@ -35,9 +35,16 @@ use std::ops::{
 pub struct Size(f64);
 
 impl Size {
+   pub const HAIRLINE: Size = Size(1e-8);
+   pub const INFINITY: Size = Size(f64::INFINITY);
+
    /// Converts this size to a f64 value as millimeter
    pub fn to_millimeter(&self) -> f64 {
       self.0
+   }
+
+   pub fn is_infinity(self) -> bool {
+      self.0.is_infinite()
    }
 
    /// Prepare to iterate [Size]s in the specified range.
