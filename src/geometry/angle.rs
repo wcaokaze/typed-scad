@@ -150,7 +150,9 @@ impl PartialEq for Angle {
 
 impl Add for Angle {
    type Output = Angle;
-   fn add(self, rhs: Angle) -> Angle { Angle(self.0 + rhs.0) }
+   fn add(self, rhs: Angle) -> Angle {
+      Angle(self.0 + rhs.0)
+   }
 }
 
 impl AddAssign for Angle {
@@ -161,7 +163,9 @@ impl AddAssign for Angle {
 
 impl Sub for Angle {
    type Output = Angle;
-   fn sub(self, rhs: Angle) -> Angle { Angle(self.0 - rhs.0) }
+   fn sub(self, rhs: Angle) -> Angle {
+      Angle(self.0 - rhs.0)
+   }
 }
 
 impl SubAssign for Angle {
@@ -170,36 +174,56 @@ impl SubAssign for Angle {
    }
 }
 
-impl<Rhs> Mul<Rhs> for Angle where Rhs: Into<f64> {
-   type Output = Angle;
-   fn mul(self, rhs: Rhs) -> Angle { Angle(self.0 * rhs.into()) }
+macro_rules! mul {
+   ($($t:ty),+) => ($(
+      impl Mul<$t> for Angle {
+         type Output = Angle;
+         fn mul(self, rhs: $t) -> Angle {
+            Angle(self.0 * rhs as f64)
+         }
+      }
+
+      impl MulAssign<$t> for Angle {
+         fn mul_assign(&mut self, rhs: $t) {
+            *self = *self * rhs;
+         }
+      }
+   )+)
 }
 
-impl<Rhs> MulAssign<Rhs> for Angle where Rhs: Into<f64> {
-   fn mul_assign(&mut self, rhs: Rhs) {
-      *self = *self * rhs;
-   }
+mul!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64);
+
+macro_rules! div {
+   ($($t:ty),+) => ($(
+      impl Div<$t> for Angle {
+         type Output = Angle;
+         fn div(self, rhs: $t) -> Angle {
+            Angle(self.0 / rhs as f64)
+         }
+      }
+
+      impl DivAssign<$t> for Angle {
+         fn div_assign(&mut self, rhs: $t) {
+            *self = *self / rhs;
+         }
+      }
+   )+)
 }
 
-impl<Rhs> Div<Rhs> for Angle where Rhs: Into<f64> {
-   type Output = Angle;
-   fn div(self, rhs: Rhs) -> Angle { Angle(self.0 / rhs.into()) }
-}
-
-impl<Rhs> DivAssign<Rhs> for Angle where Rhs: Into<f64> {
-   fn div_assign(&mut self, rhs: Rhs) {
-      *self = *self / rhs;
-   }
-}
+div!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64);
 
 impl Div for Angle {
    type Output = f64;
-   fn div(self, rhs: Angle) -> f64 { self.0 / rhs.0 }
+   fn div(self, rhs: Angle) -> f64 {
+      self.0 / rhs.0
+   }
 }
 
 impl Neg for Angle {
    type Output = Angle;
-   fn neg(self) -> Angle { Angle(-self.0) }
+   fn neg(self) -> Angle {
+      Angle(-self.0)
+   }
 }
 
 /// Type that can make [Angle] with `deg()` postfix.
@@ -215,15 +239,21 @@ pub trait AngleLiteral {
    fn rad(self) -> Angle;
 }
 
-impl<T> AngleLiteral for T where T: Into<f64> {
-   fn deg(self) -> Angle {
-      Angle(self.into().to_radians())
-   }
+macro_rules! angle_literal {
+   ($($t:ty),+) => ($(
+      impl AngleLiteral for $t {
+         fn deg(self) -> Angle {
+            Angle((self as f64).to_radians())
+         }
 
-   fn rad(self) -> Angle {
-      Angle(self.into())
-   }
+         fn rad(self) -> Angle {
+            Angle(self as f64)
+         }
+      }
+   )+)
 }
+
+angle_literal!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64);
 
 #[cfg(test)]
 mod tests {

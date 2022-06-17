@@ -102,7 +102,9 @@ impl PartialEq for Size {
 
 impl Add for Size {
    type Output = Size;
-   fn add(self, rhs: Size) -> Size { Size(self.0 + rhs.0) }
+   fn add(self, rhs: Size) -> Size {
+      Size(self.0 + rhs.0)
+   }
 }
 
 impl AddAssign for Size {
@@ -113,7 +115,9 @@ impl AddAssign for Size {
 
 impl Sub for Size {
    type Output = Size;
-   fn sub(self, rhs: Size) -> Size { Size(self.0 - rhs.0) }
+   fn sub(self, rhs: Size) -> Size {
+      Size(self.0 - rhs.0)
+   }
 }
 
 impl SubAssign for Size {
@@ -122,36 +126,56 @@ impl SubAssign for Size {
    }
 }
 
-impl<Rhs> Mul<Rhs> for Size where Rhs: Into<f64> {
-   type Output = Size;
-   fn mul(self, rhs: Rhs) -> Size { Size(self.0 * rhs.into()) }
+macro_rules! mul {
+   ($($t:ty),+) => ($(
+      impl Mul<$t> for Size {
+         type Output = Size;
+         fn mul(self, rhs: $t) -> Size {
+            Size(self.0 * rhs as f64)
+         }
+      }
+
+      impl MulAssign<$t> for Size {
+         fn mul_assign(&mut self, rhs: $t) {
+            *self = *self * rhs;
+         }
+      }
+   )+)
 }
 
-impl<Rhs> MulAssign<Rhs> for Size where Rhs: Into<f64> {
-   fn mul_assign(&mut self, rhs: Rhs) {
-      *self = *self * rhs;
-   }
+mul!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64);
+
+macro_rules! div {
+   ($($t:ty),+) => ($(
+      impl Div<$t> for Size {
+         type Output = Size;
+         fn div(self, rhs: $t) -> Size {
+            Size(self.0 / rhs as f64)
+         }
+      }
+
+      impl DivAssign<$t> for Size {
+         fn div_assign(&mut self, rhs: $t) {
+            *self = *self / rhs;
+         }
+      }
+   )+)
 }
 
-impl<Rhs> Div<Rhs> for Size where Rhs: Into<f64> {
-   type Output = Size;
-   fn div(self, rhs: Rhs) -> Size { Size(self.0 / rhs.into()) }
-}
-
-impl<Rhs> DivAssign<Rhs> for Size where Rhs: Into<f64> {
-   fn div_assign(&mut self, rhs: Rhs) {
-      *self = *self / rhs;
-   }
-}
+div!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64);
 
 impl Div for Size {
    type Output = f64;
-   fn div(self, rhs: Size) -> f64 { self.0 / rhs.0 }
+   fn div(self, rhs: Size) -> f64 {
+      self.0 / rhs.0
+   }
 }
 
 impl Neg for Size {
    type Output = Size;
-   fn neg(self) -> Size { Size(-self.0) }
+   fn neg(self) -> Size {
+      Size(-self.0)
+   }
 }
 
 /// Type that can make [Size] with `mm()` postfix.
@@ -167,15 +191,21 @@ pub trait SizeLiteral {
    fn cm(self) -> Size;
 }
 
-impl<T> SizeLiteral for T where T: Into<f64> {
-   fn mm(self) -> Size {
-      Size(self.into())
-   }
+macro_rules! size_literal {
+   ($($t:ty),+) => ($(
+      impl SizeLiteral for $t {
+         fn mm(self) -> Size {
+            Size(self as f64)
+         }
 
-   fn cm(self) -> Size {
-      Size(self.into() * 10.0)
-   }
+         fn cm(self) -> Size {
+            Size((self as f64) * 10.0)
+         }
+      }
+   )+)
 }
+
+size_literal!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64);
 
 #[cfg(test)]
 mod tests {
