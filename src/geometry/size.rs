@@ -140,6 +140,13 @@ macro_rules! mul {
             *self = *self * rhs;
          }
       }
+
+      impl Mul<Size> for $t {
+         type Output = Size;
+         fn mul(self, rhs: Size) -> Size {
+            Size(self as f64 * rhs.0)
+         }
+      }
    )+)
 }
 
@@ -264,6 +271,15 @@ mod tests {
       assert_eq!(Size( 42.0) * -1.5, Size(-63.0));
       assert_eq!(Size(-42.0) *  1.5, Size(-63.0));
       assert_eq!(Size(-42.0) * -1.5, Size( 63.0));
+
+      assert_eq!( 2 * Size( 42.0), Size( 84.0));
+      assert_eq!(-2 * Size( 42.0), Size(-84.0));
+      assert_eq!( 2 * Size(-42.0), Size(-84.0));
+      assert_eq!(-2 * Size(-42.0), Size( 84.0));
+      assert_eq!( 1.5 * Size( 42.0), Size( 63.0));
+      assert_eq!(-1.5 * Size( 42.0), Size(-63.0));
+      assert_eq!( 1.5 * Size(-42.0), Size(-63.0));
+      assert_eq!(-1.5 * Size(-42.0), Size( 63.0));
 
       assert_eq!(Size( 42.0) /  2, Size( 21.0));
       assert_eq!(Size( 42.0) / -2, Size(-21.0));

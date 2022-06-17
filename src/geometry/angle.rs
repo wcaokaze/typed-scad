@@ -188,6 +188,13 @@ macro_rules! mul {
             *self = *self * rhs;
          }
       }
+
+      impl Mul<Angle> for $t {
+         type Output = Angle;
+         fn mul(self, rhs: Angle) -> Angle {
+            Angle(self as f64 * rhs.0)
+         }
+      }
    )+)
 }
 
@@ -320,6 +327,15 @@ mod tests {
       assert_eq!(Angle( 0.42) * -1.5, Angle(-0.63));
       assert_eq!(Angle(-0.42) *  1.5, Angle(-0.63));
       assert_eq!(Angle(-0.42) * -1.5, Angle( 0.63));
+
+      assert_eq!( 2 * Angle( 0.42), Angle( 0.84));
+      assert_eq!(-2 * Angle( 0.42), Angle(-0.84));
+      assert_eq!( 2 * Angle(-0.42), Angle(-0.84));
+      assert_eq!(-2 * Angle(-0.42), Angle( 0.84));
+      assert_eq!( 1.5 * Angle( 0.42), Angle( 0.63));
+      assert_eq!(-1.5 * Angle( 0.42), Angle(-0.63));
+      assert_eq!( 1.5 * Angle(-0.42), Angle(-0.63));
+      assert_eq!(-1.5 * Angle(-0.42), Angle( 0.63));
 
       assert_eq!(Angle( 0.42) /  2, Angle( 0.21));
       assert_eq!(Angle( 0.42) / -2, Angle(-0.21));
