@@ -39,7 +39,7 @@ impl Size {
    pub const INFINITY: Size = Size(f64::INFINITY);
 
    /// Converts this size to a f64 value as millimeter
-   pub fn to_millimeter(&self) -> f64 {
+   pub fn to_millimeter(self) -> f64 {
       self.0
    }
 

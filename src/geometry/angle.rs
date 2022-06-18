@@ -54,12 +54,12 @@ impl Angle {
    pub const PI: Angle = Angle(std::f64::consts::PI);
 
    /// Converts this angle to a f64 value as radian
-   pub fn to_radian(&self) -> f64 {
+   pub fn to_radian(self) -> f64 {
       self.0
    }
 
    /// Converts this angle to a f64 value as degree
-   pub fn to_degree(&self) -> f64 {
+   pub fn to_degree(self) -> f64 {
       self.0.to_degrees()
    }
 
