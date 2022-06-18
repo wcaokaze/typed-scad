@@ -53,6 +53,10 @@ impl Angle {
    /// Also consider using `180.deg()`
    pub const PI: Angle = Angle(std::f64::consts::PI);
 
+   pub const fn radian(radian: f64) -> Angle {
+      Angle(radian)
+   }
+
    /// Converts this angle to a f64 value as radian
    pub fn to_radian(self) -> f64 {
       self.0
