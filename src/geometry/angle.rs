@@ -63,43 +63,43 @@ impl Angle {
       self.0.to_degrees()
    }
 
-   fn sin(self) -> f64 {
+   pub fn sin(self) -> f64 {
       self.0.sin()
    }
 
-   fn cos(self) -> f64 {
+   pub fn cos(self) -> f64 {
       self.0.cos()
    }
 
-   fn tan(self) -> f64 {
+   pub fn tan(self) -> f64 {
       self.0.tan()
    }
 
-   fn sin_cos(self) -> (f64, f64) {
+   pub fn sin_cos(self) -> (f64, f64) {
       self.0.sin_cos()
    }
 
-   fn asin(a: f64) -> Angle {
+   pub fn asin(a: f64) -> Angle {
       Angle(f64::asin(a))
    }
 
-   fn acos(a: f64) -> Angle {
+   pub fn acos(a: f64) -> Angle {
       Angle(f64::acos(a))
    }
 
-   fn atan(a: f64) -> Angle {
+   pub fn atan(a: f64) -> Angle {
       Angle(f64::atan(a))
    }
 
-   fn atan2(y: Size, x: Size) -> Angle {
+   pub fn atan2(y: Size, x: Size) -> Angle {
       Angle(f64::atan2(y.to_millimeter(), x.to_millimeter()))
    }
 
-   fn abs(self) -> Angle {
+   pub fn abs(self) -> Angle {
       Angle(self.0.abs())
    }
 
-   fn clamp(self, min: Angle, max: Angle) -> Angle {
+   pub fn clamp(self, min: Angle, max: Angle) -> Angle {
       Angle(self.0.clamp(min.0, max.0))
    }
 

@@ -66,11 +66,11 @@ impl Size {
       size_range
    }
 
-   fn abs(self) -> Size {
+   pub fn abs(self) -> Size {
       Size(self.0.abs())
    }
 
-   fn clamp(self, min: Size, max: Size) -> Size {
+   pub fn clamp(self, min: Size, max: Size) -> Size {
       Size(self.0.clamp(min.0, max.0))
    }
 }
