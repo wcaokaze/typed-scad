@@ -1,5 +1,6 @@
 use std::cmp::Ordering;
 use super::IterableSizeRange;
+use super::unit::Unit;
 use std::fmt::{self, Display, Formatter};
 use std::ops::{
    Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign
@@ -188,6 +189,8 @@ impl Neg for Size {
       Size(-self.0)
    }
 }
+
+impl Unit for Size {}
 
 /// Type that can make [Size] with `mm()` postfix.
 ///

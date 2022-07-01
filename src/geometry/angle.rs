@@ -1,5 +1,6 @@
 use std::cmp::Ordering;
 use super::{IterableAngleRange, Size};
+use super::unit::Unit;
 use std::fmt::{self, Display, Formatter};
 use std::ops::{
    Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign
@@ -236,6 +237,8 @@ impl Neg for Angle {
       Angle(-self.0)
    }
 }
+
+impl Unit for Angle {}
 
 /// Type that can make [Angle] with `deg()` postfix.
 ///
