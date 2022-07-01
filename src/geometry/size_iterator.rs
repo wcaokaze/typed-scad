@@ -1,5 +1,4 @@
 use super::{Size, SizeLiteral};
-use std::iter::Sum;
 use std::ops::{Bound, Range, RangeBounds, RangeFrom, RangeInclusive};
 
 /// An [Iterator] for [Size].
@@ -89,16 +88,6 @@ impl IterableSizeRange for RangeFrom<Size> {
    }
 }
 
-impl Sum for Size {
-   fn sum<I>(iter: I) -> Size where I: Iterator<Item = Size> {
-      let mut sum = 0.mm();
-      for s in iter {
-         sum += s;
-      }
-      sum
-   }
-}
-
 #[cfg(test)]
 mod tests {
    use super::super::{Size, SizeLiteral};
@@ -156,11 +145,5 @@ mod tests {
       let actual: Vec<_> = Size::iterate(42.mm()..45.mm()).step(-1.5.mm())
          .collect();
       assert_eq!(actual, vec![]);
-   }
-
-   #[test]
-   fn sum_by_iter() {
-      let sum: Size = Size::iterate(1.mm()..=10.mm()).step(1.mm()).sum();
-      assert_eq!(sum, 55.mm());
    }
 }

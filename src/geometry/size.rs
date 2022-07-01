@@ -2,6 +2,7 @@ use std::cmp::Ordering;
 use super::IterableSizeRange;
 use super::unit::Unit;
 use std::fmt::{self, Display, Formatter};
+use std::iter::Sum;
 use std::ops::{
    Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign
 };
@@ -36,6 +37,7 @@ use std::ops::{
 pub struct Size(f64);
 
 impl Size {
+   pub const ZERO: Size = Size(0.0);
    pub const HAIRLINE: Size = Size(1e-8);
    pub const INFINITY: Size = Size(f64::INFINITY);
 
@@ -149,7 +151,7 @@ macro_rules! mul {
       impl Mul<Size> for $t {
          type Output = Size;
          fn mul(self, rhs: Size) -> Size {
-            Size(self as f64 * rhs.0)
+            rhs * self
          }
       }
    )+)
@@ -220,6 +222,16 @@ macro_rules! size_literal {
 }
 
 size_literal!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64);
+
+impl Sum for Size {
+   fn sum<I>(iter: I) -> Size where I: Iterator<Item = Size> {
+      let mut sum = 0.mm();
+      for s in iter {
+         sum += s;
+      }
+      sum
+   }
+}
 
 #[cfg(test)]
 mod tests {
@@ -331,5 +343,15 @@ mod tests {
          Size(42.0).partial_cmp(&Size(42.0 - 1e-12)),
          Some(Ordering::Equal)
       );
+   }
+
+   #[test]
+   fn sum() {
+      let sum: Size = (1..=10)
+         .into_iter()
+         .map(|i| Size(i as f64))
+         .sum();
+
+      assert_eq!(sum, Size(55.0));
    }
 }

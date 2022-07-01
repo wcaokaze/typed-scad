@@ -197,7 +197,7 @@ macro_rules! mul {
       impl Mul<Angle> for $t {
          type Output = Angle;
          fn mul(self, rhs: Angle) -> Angle {
-            Angle(self as f64 * rhs.0)
+            rhs * self
          }
       }
    )+)
