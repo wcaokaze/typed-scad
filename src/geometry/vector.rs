@@ -1,9 +1,9 @@
-use super::{Angle, Size, SizeLiteral, Point};
+use crate::geometry::{Angle, Size, SizeLiteral, Point};
+use crate::geometry::unit::Exp;
 use std::iter::Sum;
 use std::ops::{
    Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign
 };
-use crate::geometry::unit::Exp;
 
 /// 3D Vector.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -188,7 +188,8 @@ impl Sum for Vector {
 
 #[cfg(test)]
 mod tests {
-   use crate::geometry::{AngleLiteral, Point, SizeLiteral, Vector};
+   use crate::geometry::{AngleLiteral, Point, SizeLiteral};
+   use super::Vector;
 
    fn vector(x: f64, y: f64, z: f64) -> Vector {
       Vector::new(x.mm(), y.mm(), z.mm())

@@ -151,7 +151,7 @@ impl<U: Unit, const N: i32> Unit for Exp<U, N> {}
 #[cfg(test)]
 mod tests {
    use crate::geometry::Size;
-   use crate::geometry::unit::{DerivedUnit, Exp};
+   use super::{DerivedUnit, Exp};
 
    #[test]
    fn instantiate_and_get() {

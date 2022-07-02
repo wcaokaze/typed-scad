@@ -1,4 +1,4 @@
-use super::{Size, SizeLiteral};
+use crate::geometry::{Size, SizeLiteral};
 use std::ops::{Bound, Range, RangeBounds, RangeFrom, RangeInclusive};
 
 /// An [Iterator] for [Size].
@@ -90,8 +90,8 @@ impl IterableSizeRange for RangeFrom<Size> {
 
 #[cfg(test)]
 mod tests {
-   use super::super::{Size, SizeLiteral};
    use super::IterableSizeRange;
+   use crate::geometry::{Size, SizeLiteral};
 
    #[test]
    fn iterate() {

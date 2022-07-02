@@ -1,6 +1,6 @@
+use crate::geometry::{IterableAngleRange, Size};
+use crate::geometry::unit::Unit;
 use std::cmp::Ordering;
-use super::{IterableAngleRange, Size};
-use super::unit::Unit;
 use std::fmt::{self, Display, Formatter};
 use std::ops::{
    Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign
