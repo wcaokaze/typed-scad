@@ -7,7 +7,7 @@ pub struct Point {
 }
 
 impl Point {
-   const ORIGIN: Point = Point { offset_from_origin: Vector::ZERO };
+   pub const ORIGIN: Point = Point { offset_from_origin: Vector::ZERO };
 
    pub const fn new(x: Size, y: Size, z: Size) -> Point {
       Point {

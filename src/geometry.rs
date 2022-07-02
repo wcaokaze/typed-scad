@@ -2,6 +2,7 @@ pub mod unit;
 
 mod angle;
 mod angle_iterator;
+mod plane;
 mod point;
 mod size;
 mod size_iterator;
