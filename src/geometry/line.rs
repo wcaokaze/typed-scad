@@ -18,14 +18,14 @@ impl Line {
       }
    }
 
-   pub const fn from_2points(a: &Point, b: &Point) -> Line {
+   pub fn from_2points(a: &Point, b: &Point) -> Line {
       Line {
          point: *a,
          vector: Vector::between(a, b)
       }
    }
 
-   pub fn vector(&self) -> Vector {
-      self.vector
+   pub const fn vector(&self) -> &Vector {
+      &self.vector
    }
 }

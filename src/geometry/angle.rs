@@ -59,7 +59,7 @@ impl Angle {
    }
 
    /// Converts this angle to a f64 value as radian
-   pub fn to_radian(self) -> f64 {
+   pub const fn to_radian(self) -> f64 {
       self.0
    }
 

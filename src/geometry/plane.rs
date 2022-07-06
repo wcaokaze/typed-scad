@@ -26,7 +26,7 @@ impl Plane {
       }
    }
 
-   pub fn normal_vector(&self) -> Vector {
-      self.normal_vector
+   pub const fn normal_vector(&self) -> &Vector {
+      &self.normal_vector
    }
 }

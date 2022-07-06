@@ -15,15 +15,15 @@ impl Point {
       }
    }
 
-   pub fn x(&self) -> Size {
+   pub const fn x(&self) -> Size {
       self.offset_from_origin.x
    }
 
-   pub fn y(&self) -> Size {
+   pub const fn y(&self) -> Size {
       self.offset_from_origin.y
    }
 
-   pub fn z(&self) -> Size {
+   pub const fn z(&self) -> Size {
       self.offset_from_origin.z
    }
 
