@@ -1,3 +1,4 @@
+pub mod operators;
 pub mod unit;
 
 mod angle;
@@ -11,6 +12,8 @@ mod vector;
 
 pub use self::angle::{Angle, AngleLiteral};
 pub use self::angle_iterator::{AngleIterator, IterableAngleRange};
+pub use self::line::Line;
+pub use self::plane::Plane;
 pub use self::point::Point;
 pub use self::size::{Size, SizeLiteral};
 pub use self::size_iterator::{IterableSizeRange, SizeIterator};
