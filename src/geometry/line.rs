@@ -1,4 +1,5 @@
-use crate::geometry::{Point, Vector};
+use crate::geometry::{Plane, Point, Vector};
+use crate::geometry::operators::Intersection;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Line {
@@ -25,7 +26,20 @@ impl Line {
       }
    }
 
+   pub const fn point(&self) -> &Point {
+      // TODO: return the nearest point from origin
+      &self.point
+   }
+
    pub const fn vector(&self) -> &Vector {
       &self.vector
+   }
+}
+
+impl Intersection<Plane> for Line {
+   type Output = Point;
+
+   fn intersection(self, rhs: Plane) -> Point {
+      rhs.intersection(self)
    }
 }
