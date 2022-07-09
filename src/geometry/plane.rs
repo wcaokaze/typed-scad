@@ -27,6 +27,12 @@ impl Plane {
       }
    }
 
+   /// returns the point which is on this plane and the nearest from origin.
+   pub fn point(&self) -> Point {
+      Line::new(&Point::ORIGIN, &self.normal_vector)
+         .intersection(self)
+   }
+
    pub const fn normal_vector(&self) -> &Vector {
       &self.normal_vector
    }
@@ -168,5 +174,30 @@ impl Intersection<Line> for Plane {
          Size::millimeter(p2.1 + t * v2.1),
          Size::millimeter(p2.2 + t * v2.2)
       )
+   }
+}
+
+#[cfg(test)]
+mod tests {
+   use super::Plane;
+   use crate::geometry::{Point, SizeLiteral, Vector};
+
+   #[test]
+   fn nearest_point_from_origin() {
+      let actual = Plane::new(
+            &Point::new(6.mm(), 2.mm(), 3.mm()),
+            &Vector::X_UNIT_VECTOR
+         )
+         .point();
+
+      assert_eq!(actual, Point::new(6.mm(), 0.mm(), 0.mm()));
+
+      let actual = Plane::new(
+            &Point::new(0.mm(), 0.mm(), 1.mm()),
+            &Vector::new(0.mm(), 1.mm(), 1.mm())
+         )
+         .point();
+
+      assert_eq!(actual, Point::new(0.mm(), 0.5.mm(), 0.5.mm()));
    }
 }

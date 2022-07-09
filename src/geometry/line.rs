@@ -68,7 +68,7 @@ impl Intersection<Plane> for Line {
 #[cfg(test)]
 mod tests {
    use super::Line;
-   use crate::geometry::{Point, Size, SizeLiteral, Vector};
+   use crate::geometry::{Point, SizeLiteral, Vector};
 
    #[test]
    fn nearest_point_from_origin() {
