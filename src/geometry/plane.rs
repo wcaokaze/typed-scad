@@ -1,3 +1,4 @@
+use crate::foundation::rough_fp::rough_partial_eq;
 use crate::geometry::{Line, Point, Size, Vector};
 use crate::geometry::operators::Intersection;
 
@@ -188,8 +189,12 @@ impl Intersection<Line> for Plane {
          rhs.vector.z.to_millimeter()
       );
 
-      let t = ((p1.0 - p2.0) * v1.0 + (p1.1 - p2.1) * v1.1 + (p1.2 - p2.2) * v1.2) /
-         (v1.0 * v2.0 + v1.1 * v2.1 + v1.2 * v2.2);
+      let inner_product = v1.0 * v2.0 + v1.1 * v2.1 + v1.2 * v2.2;
+      if rough_partial_eq(inner_product, 0.0) {
+         panic!("The specified plane and line don't have an intersection.");
+      }
+      let t = ((p1.0 - p2.0) * v1.0 + (p1.1 - p2.1) * v1.1 + (p1.2 - p2.2) * v1.2)
+         / inner_product;
 
       Point::new(
          Size::millimeter(p2.0 + t * v2.0),
