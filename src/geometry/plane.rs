@@ -202,7 +202,8 @@ impl Intersection<Line> for Plane {
 #[cfg(test)]
 mod tests {
    use super::Plane;
-   use crate::geometry::{Point, SizeLiteral, Vector};
+   use crate::geometry::{Line, Point, SizeLiteral, Vector};
+   use crate::geometry::operators::Intersection;
 
    #[test]
    fn nearest_point_from_origin() {
@@ -244,5 +245,89 @@ mod tests {
          Plane::new(&Point::ORIGIN, &Vector::Z_UNIT_VECTOR),
          Plane::new(&Point::ORIGIN, &Vector::Y_UNIT_VECTOR)
       );
+   }
+
+   #[test]
+   fn intersection_plane() {
+      assert_eq!(
+         Plane::XY.intersection(Plane::YZ),
+         Line::Y_AXIS
+      );
+
+      assert_eq!(
+         Plane::YZ.intersection(Plane::ZX),
+         Line::Z_AXIS
+      );
+
+      assert_eq!(
+         Plane::ZX.intersection(Plane::XY),
+         Line::X_AXIS
+      );
+
+      let z_3mm_plane = Plane::new(
+         &Point::new(0.mm(), 0.mm(), 3.mm()),
+         &Vector::Z_UNIT_VECTOR
+      );
+
+      let xy_45deg_plane = Plane::new(
+         &Point::new(1.mm(), 0.mm(), 0.mm()),
+         &Vector::new(-1.mm(), 1.mm(), 0.mm())
+      );
+
+      let actual = z_3mm_plane.intersection(xy_45deg_plane);
+      let expected = Line::new(
+         &Point::new(1.mm(), 0.mm(), 3.mm()),
+         &Vector::new(1.mm(), 1.mm(), 0.mm())
+      );
+      assert_eq!(actual, expected);
+   }
+
+   #[test]
+   #[should_panic]
+   fn intersection_same_planes() {
+      Plane::XY.intersection(Plane::XY);
+   }
+
+   #[test]
+   #[should_panic]
+   fn intersection_same_direction() {
+      let a = Plane::new(&Point::new(1.mm(), 2.mm(), 3.mm()), &Vector::X_UNIT_VECTOR);
+      let b = Plane::new(&Point::new(4.mm(), 5.mm(), 6.mm()), &Vector::X_UNIT_VECTOR);
+      a.intersection(b);
+   }
+
+   #[test]
+   fn intersection_line() {
+      assert_eq!(
+         Plane::XY.intersection(Line::Z_AXIS),
+         Point::ORIGIN
+      );
+
+      let line = Line::new(
+         &Point::new(1.mm(), 0.mm(), 0.mm()),
+         &Vector::new(1.mm(), 1.mm(), -1.mm())
+      );
+
+      assert_eq!(
+         Plane::YZ.intersection(line),
+         Point::new(0.mm(), -1.mm(), 1.mm())
+      );
+   }
+
+   #[test]
+   #[should_panic]
+   fn intersection_line_on_plane() {
+      Plane::XY.intersection(Line::X_AXIS);
+   }
+
+   #[test]
+   #[should_panic]
+   fn intersection_same_direction_line() {
+      let line = Line::new(
+         &Point::new(0.mm(), 0.mm(), 3.mm()),
+         &Vector::X_UNIT_VECTOR
+      );
+
+      Plane::XY.intersection(line);
    }
 }
