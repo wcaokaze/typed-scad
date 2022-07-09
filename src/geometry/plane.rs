@@ -38,6 +38,13 @@ impl Plane {
    }
 }
 
+impl PartialEq for Plane {
+   fn eq(&self, other: &Plane) -> bool {
+      self.normal_vector == other.normal_vector
+         && self.point() == other.point()
+   }
+}
+
 impl Intersection<&Plane> for &Plane {
    type Output = Line;
    fn intersection(self, rhs: &Plane) -> Line {
@@ -199,5 +206,23 @@ mod tests {
          .point();
 
       assert_eq!(actual, Point::new(0.mm(), 0.5.mm(), 0.5.mm()));
+   }
+
+   #[test]
+   fn eq() {
+      assert_eq!(
+         Plane::new(&Point::ORIGIN, &Vector::Z_UNIT_VECTOR),
+         Plane::new(&Point::new(3.mm(), 5.mm(), 0.mm()), &Vector::Z_UNIT_VECTOR)
+      );
+
+      assert_ne!(
+         Plane::new(&Point::ORIGIN, &Vector::Z_UNIT_VECTOR),
+         Plane::new(&Point::new(3.mm(), 5.mm(), 1.mm()), &Vector::Z_UNIT_VECTOR)
+      );
+
+      assert_ne!(
+         Plane::new(&Point::ORIGIN, &Vector::Z_UNIT_VECTOR),
+         Plane::new(&Point::ORIGIN, &Vector::Y_UNIT_VECTOR)
+      );
    }
 }

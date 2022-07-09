@@ -37,6 +37,13 @@ impl Line {
    }
 }
 
+impl PartialEq for Line {
+   fn eq(&self, other: &Line) -> bool {
+      self.vector == other.vector
+         && self.point() == other.point()
+   }
+}
+
 impl Intersection<&Plane> for &Line {
    type Output = Point;
    fn intersection(self, rhs: &Plane) -> Point {
@@ -87,5 +94,23 @@ mod tests {
          .point();
 
       assert_eq!(actual, Point::new(0.mm(), 0.5.mm(), 0.5.mm()));
+   }
+
+   #[test]
+   fn eq() {
+      assert_eq!(
+         Line::new(&Point::ORIGIN, &Vector::Z_UNIT_VECTOR),
+         Line::new(&Point::new(0.mm(), 0.mm(), 4.mm()), &Vector::Z_UNIT_VECTOR)
+      );
+
+      assert_ne!(
+         Line::new(&Point::ORIGIN, &Vector::Z_UNIT_VECTOR),
+         Line::new(&Point::new(1.mm(), 0.mm(), 4.mm()), &Vector::Z_UNIT_VECTOR)
+      );
+
+      assert_ne!(
+         Line::new(&Point::ORIGIN, &Vector::Z_UNIT_VECTOR),
+         Line::new(&Point::ORIGIN, &Vector::Y_UNIT_VECTOR)
+      );
    }
 }
