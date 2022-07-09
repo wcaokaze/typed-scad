@@ -1,5 +1,7 @@
+use crate::foundation::rough_fp::{rough_partial_cmp, rough_partial_eq};
+use crate::geometry::{IterableAngleRange, Size};
+use crate::geometry::unit::Unit;
 use std::cmp::Ordering;
-use super::IterableAngleRange;
 use std::fmt::{self, Display, Formatter};
 use std::ops::{
    Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign
@@ -49,14 +51,62 @@ use std::ops::{
 pub struct Angle(f64);
 
 impl Angle {
+   /// PI radian. But `Angle::PI` is not enough readable.
+   /// Also consider using `180.deg()`
+   pub const PI: Angle = Angle(std::f64::consts::PI);
+
+   pub const fn radian(radian: f64) -> Angle {
+      Angle(radian)
+   }
+
    /// Converts this angle to a f64 value as radian
-   pub fn to_radian(&self) -> f64 {
+   pub const fn to_radian(self) -> f64 {
       self.0
    }
 
    /// Converts this angle to a f64 value as degree
-   pub fn to_degree(&self) -> f64 {
+   pub fn to_degree(self) -> f64 {
       self.0.to_degrees()
+   }
+
+   pub fn sin(self) -> f64 {
+      self.0.sin()
+   }
+
+   pub fn cos(self) -> f64 {
+      self.0.cos()
+   }
+
+   pub fn tan(self) -> f64 {
+      self.0.tan()
+   }
+
+   pub fn sin_cos(self) -> (f64, f64) {
+      self.0.sin_cos()
+   }
+
+   pub fn asin(a: f64) -> Angle {
+      Angle(f64::asin(a))
+   }
+
+   pub fn acos(a: f64) -> Angle {
+      Angle(f64::acos(a))
+   }
+
+   pub fn atan(a: f64) -> Angle {
+      Angle(f64::atan(a))
+   }
+
+   pub fn atan2(y: Size, x: Size) -> Angle {
+      Angle(f64::atan2(y.to_millimeter(), x.to_millimeter()))
+   }
+
+   pub fn abs(self) -> Angle {
+      Angle(self.0.abs())
+   }
+
+   pub fn clamp(self, min: Angle, max: Angle) -> Angle {
+      Angle(self.0.clamp(min.0, max.0))
    }
 
    /// Prepare to iterate [Angle]s in the specified range.
@@ -85,28 +135,23 @@ impl Display for Angle {
    }
 }
 
-const D: f64 = 1e-10;
-
 impl PartialOrd for Angle {
    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-      match (self.0 < other.0 + D, self.0 > other.0 - D) {
-         (false, false) => None,
-         (false,  true) => Some(Ordering::Greater),
-         ( true, false) => Some(Ordering::Less),
-         ( true,  true) => Some(Ordering::Equal)
-      }
+      rough_partial_cmp(self.0, other.0)
    }
 }
 
 impl PartialEq for Angle {
    fn eq(&self, other: &Self) -> bool {
-      self.0 > other.0 - D && self.0 < other.0 + D
+      rough_partial_eq(self.0, other.0)
    }
 }
 
 impl Add for Angle {
    type Output = Angle;
-   fn add(self, rhs: Angle) -> Angle { Angle(self.0 + rhs.0) }
+   fn add(self, rhs: Angle) -> Angle {
+      Angle(self.0 + rhs.0)
+   }
 }
 
 impl AddAssign for Angle {
@@ -117,7 +162,9 @@ impl AddAssign for Angle {
 
 impl Sub for Angle {
    type Output = Angle;
-   fn sub(self, rhs: Angle) -> Angle { Angle(self.0 - rhs.0) }
+   fn sub(self, rhs: Angle) -> Angle {
+      Angle(self.0 - rhs.0)
+   }
 }
 
 impl SubAssign for Angle {
@@ -126,37 +173,66 @@ impl SubAssign for Angle {
    }
 }
 
-impl<Rhs> Mul<Rhs> for Angle where Rhs: Into<f64> {
-   type Output = Angle;
-   fn mul(self, rhs: Rhs) -> Angle { Angle(self.0 * rhs.into()) }
+macro_rules! mul {
+   ($($t:ty),+) => ($(
+      impl Mul<$t> for Angle {
+         type Output = Angle;
+         fn mul(self, rhs: $t) -> Angle {
+            Angle(self.0 * rhs as f64)
+         }
+      }
+
+      impl MulAssign<$t> for Angle {
+         fn mul_assign(&mut self, rhs: $t) {
+            *self = *self * rhs;
+         }
+      }
+
+      impl Mul<Angle> for $t {
+         type Output = Angle;
+         fn mul(self, rhs: Angle) -> Angle {
+            rhs * self
+         }
+      }
+   )+)
 }
 
-impl<Rhs> MulAssign<Rhs> for Angle where Rhs: Into<f64> {
-   fn mul_assign(&mut self, rhs: Rhs) {
-      *self = *self * rhs;
-   }
+mul!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64);
+
+macro_rules! div {
+   ($($t:ty),+) => ($(
+      impl Div<$t> for Angle {
+         type Output = Angle;
+         fn div(self, rhs: $t) -> Angle {
+            Angle(self.0 / rhs as f64)
+         }
+      }
+
+      impl DivAssign<$t> for Angle {
+         fn div_assign(&mut self, rhs: $t) {
+            *self = *self / rhs;
+         }
+      }
+   )+)
 }
 
-impl<Rhs> Div<Rhs> for Angle where Rhs: Into<f64> {
-   type Output = Angle;
-   fn div(self, rhs: Rhs) -> Angle { Angle(self.0 / rhs.into()) }
-}
-
-impl<Rhs> DivAssign<Rhs> for Angle where Rhs: Into<f64> {
-   fn div_assign(&mut self, rhs: Rhs) {
-      *self = *self / rhs;
-   }
-}
+div!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64);
 
 impl Div for Angle {
    type Output = f64;
-   fn div(self, rhs: Angle) -> f64 { self.0 / rhs.0 }
+   fn div(self, rhs: Angle) -> f64 {
+      self.0 / rhs.0
+   }
 }
 
 impl Neg for Angle {
    type Output = Angle;
-   fn neg(self) -> Angle { Angle(-self.0) }
+   fn neg(self) -> Angle {
+      Angle(-self.0)
+   }
 }
+
+impl Unit for Angle {}
 
 /// Type that can make [Angle] with `deg()` postfix.
 ///
@@ -171,15 +247,21 @@ pub trait AngleLiteral {
    fn rad(self) -> Angle;
 }
 
-impl<T> AngleLiteral for T where T: Into<f64> {
-   fn deg(self) -> Angle {
-      Angle(self.into().to_radians())
-   }
+macro_rules! angle_literal {
+   ($($t:ty),+) => ($(
+      impl AngleLiteral for $t {
+         fn deg(self) -> Angle {
+            Angle((self as f64).to_radians())
+         }
 
-   fn rad(self) -> Angle {
-      Angle(self.into())
-   }
+         fn rad(self) -> Angle {
+            Angle(self as f64)
+         }
+      }
+   )+)
 }
+
+angle_literal!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64);
 
 #[cfg(test)]
 mod tests {
@@ -246,6 +328,15 @@ mod tests {
       assert_eq!(Angle( 0.42) * -1.5, Angle(-0.63));
       assert_eq!(Angle(-0.42) *  1.5, Angle(-0.63));
       assert_eq!(Angle(-0.42) * -1.5, Angle( 0.63));
+
+      assert_eq!( 2 * Angle( 0.42), Angle( 0.84));
+      assert_eq!(-2 * Angle( 0.42), Angle(-0.84));
+      assert_eq!( 2 * Angle(-0.42), Angle(-0.84));
+      assert_eq!(-2 * Angle(-0.42), Angle( 0.84));
+      assert_eq!( 1.5 * Angle( 0.42), Angle( 0.63));
+      assert_eq!(-1.5 * Angle( 0.42), Angle(-0.63));
+      assert_eq!( 1.5 * Angle(-0.42), Angle(-0.63));
+      assert_eq!(-1.5 * Angle(-0.42), Angle( 0.63));
 
       assert_eq!(Angle( 0.42) /  2, Angle( 0.21));
       assert_eq!(Angle( 0.42) / -2, Angle(-0.21));

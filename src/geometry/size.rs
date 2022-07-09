@@ -1,6 +1,9 @@
+use crate::foundation::rough_fp::{rough_partial_cmp, rough_partial_eq};
+use crate::geometry::IterableSizeRange;
+use crate::geometry::unit::Unit;
 use std::cmp::Ordering;
-use super::IterableSizeRange;
 use std::fmt::{self, Display, Formatter};
+use std::iter::Sum;
 use std::ops::{
    Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign
 };
@@ -35,9 +38,21 @@ use std::ops::{
 pub struct Size(f64);
 
 impl Size {
+   pub const ZERO: Size = Size(0.0);
+   pub const HAIRLINE: Size = Size(1e-8);
+   pub const INFINITY: Size = Size(f64::INFINITY);
+
+   pub const fn millimeter(millimeter: f64) -> Size {
+      Size(millimeter)
+   }
+
    /// Converts this size to a f64 value as millimeter
-   pub fn to_millimeter(&self) -> f64 {
+   pub const fn to_millimeter(self) -> f64 {
       self.0
+   }
+
+   pub fn is_infinity(self) -> bool {
+      self.0.is_infinite()
    }
 
    /// Prepare to iterate [Size]s in the specified range.
@@ -58,6 +73,14 @@ impl Size {
    pub fn iterate<R>(size_range: R) -> R where R: IterableSizeRange {
       size_range
    }
+
+   pub fn abs(self) -> Size {
+      Size(self.0.abs())
+   }
+
+   pub fn clamp(self, min: Size, max: Size) -> Size {
+      Size(self.0.clamp(min.0, max.0))
+   }
 }
 
 impl Display for Size {
@@ -66,28 +89,23 @@ impl Display for Size {
    }
 }
 
-const D: f64 = 1e-10;
-
 impl PartialOrd for Size {
    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-      match (self.0 < other.0 + D, self.0 > other.0 - D) {
-         (false, false) => None,
-         (false,  true) => Some(Ordering::Greater),
-         ( true, false) => Some(Ordering::Less),
-         ( true,  true) => Some(Ordering::Equal)
-      }
+      rough_partial_cmp(self.0, other.0)
    }
 }
 
 impl PartialEq for Size {
    fn eq(&self, other: &Self) -> bool {
-      self.0 > other.0 - D && self.0 < other.0 + D
+      rough_partial_eq(self.0, other.0)
    }
 }
 
 impl Add for Size {
    type Output = Size;
-   fn add(self, rhs: Size) -> Size { Size(self.0 + rhs.0) }
+   fn add(self, rhs: Size) -> Size {
+      Size(self.0 + rhs.0)
+   }
 }
 
 impl AddAssign for Size {
@@ -98,7 +116,9 @@ impl AddAssign for Size {
 
 impl Sub for Size {
    type Output = Size;
-   fn sub(self, rhs: Size) -> Size { Size(self.0 - rhs.0) }
+   fn sub(self, rhs: Size) -> Size {
+      Size(self.0 - rhs.0)
+   }
 }
 
 impl SubAssign for Size {
@@ -107,37 +127,66 @@ impl SubAssign for Size {
    }
 }
 
-impl<Rhs> Mul<Rhs> for Size where Rhs: Into<f64> {
-   type Output = Size;
-   fn mul(self, rhs: Rhs) -> Size { Size(self.0 * rhs.into()) }
+macro_rules! mul {
+   ($($t:ty),+) => ($(
+      impl Mul<$t> for Size {
+         type Output = Size;
+         fn mul(self, rhs: $t) -> Size {
+            Size(self.0 * rhs as f64)
+         }
+      }
+
+      impl MulAssign<$t> for Size {
+         fn mul_assign(&mut self, rhs: $t) {
+            *self = *self * rhs;
+         }
+      }
+
+      impl Mul<Size> for $t {
+         type Output = Size;
+         fn mul(self, rhs: Size) -> Size {
+            rhs * self
+         }
+      }
+   )+)
 }
 
-impl<Rhs> MulAssign<Rhs> for Size where Rhs: Into<f64> {
-   fn mul_assign(&mut self, rhs: Rhs) {
-      *self = *self * rhs;
-   }
+mul!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64);
+
+macro_rules! div {
+   ($($t:ty),+) => ($(
+      impl Div<$t> for Size {
+         type Output = Size;
+         fn div(self, rhs: $t) -> Size {
+            Size(self.0 / rhs as f64)
+         }
+      }
+
+      impl DivAssign<$t> for Size {
+         fn div_assign(&mut self, rhs: $t) {
+            *self = *self / rhs;
+         }
+      }
+   )+)
 }
 
-impl<Rhs> Div<Rhs> for Size where Rhs: Into<f64> {
-   type Output = Size;
-   fn div(self, rhs: Rhs) -> Size { Size(self.0 / rhs.into()) }
-}
-
-impl<Rhs> DivAssign<Rhs> for Size where Rhs: Into<f64> {
-   fn div_assign(&mut self, rhs: Rhs) {
-      *self = *self / rhs;
-   }
-}
+div!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64);
 
 impl Div for Size {
    type Output = f64;
-   fn div(self, rhs: Size) -> f64 { self.0 / rhs.0 }
+   fn div(self, rhs: Size) -> f64 {
+      self.0 / rhs.0
+   }
 }
 
 impl Neg for Size {
    type Output = Size;
-   fn neg(self) -> Size { Size(-self.0) }
+   fn neg(self) -> Size {
+      Size(-self.0)
+   }
 }
+
+impl Unit for Size {}
 
 /// Type that can make [Size] with `mm()` postfix.
 ///
@@ -152,13 +201,29 @@ pub trait SizeLiteral {
    fn cm(self) -> Size;
 }
 
-impl<T> SizeLiteral for T where T: Into<f64> {
-   fn mm(self) -> Size {
-      Size(self.into())
-   }
+macro_rules! size_literal {
+   ($($t:ty),+) => ($(
+      impl SizeLiteral for $t {
+         fn mm(self) -> Size {
+            Size(self as f64)
+         }
 
-   fn cm(self) -> Size {
-      Size(self.into() * 10.0)
+         fn cm(self) -> Size {
+            Size((self as f64) * 10.0)
+         }
+      }
+   )+)
+}
+
+size_literal!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64);
+
+impl Sum for Size {
+   fn sum<I>(iter: I) -> Size where I: Iterator<Item = Size> {
+      let mut sum = 0.mm();
+      for s in iter {
+         sum += s;
+      }
+      sum
    }
 }
 
@@ -220,6 +285,15 @@ mod tests {
       assert_eq!(Size(-42.0) *  1.5, Size(-63.0));
       assert_eq!(Size(-42.0) * -1.5, Size( 63.0));
 
+      assert_eq!( 2 * Size( 42.0), Size( 84.0));
+      assert_eq!(-2 * Size( 42.0), Size(-84.0));
+      assert_eq!( 2 * Size(-42.0), Size(-84.0));
+      assert_eq!(-2 * Size(-42.0), Size( 84.0));
+      assert_eq!( 1.5 * Size( 42.0), Size( 63.0));
+      assert_eq!(-1.5 * Size( 42.0), Size(-63.0));
+      assert_eq!( 1.5 * Size(-42.0), Size(-63.0));
+      assert_eq!(-1.5 * Size(-42.0), Size( 63.0));
+
       assert_eq!(Size( 42.0) /  2, Size( 21.0));
       assert_eq!(Size( 42.0) / -2, Size(-21.0));
       assert_eq!(Size(-42.0) /  2, Size(-21.0));
@@ -263,5 +337,15 @@ mod tests {
          Size(42.0).partial_cmp(&Size(42.0 - 1e-12)),
          Some(Ordering::Equal)
       );
+   }
+
+   #[test]
+   fn sum() {
+      let sum: Size = (1..=10)
+         .into_iter()
+         .map(|i| Size(i as f64))
+         .sum();
+
+      assert_eq!(sum, Size(55.0));
    }
 }

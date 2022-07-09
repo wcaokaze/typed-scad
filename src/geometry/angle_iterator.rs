@@ -1,4 +1,4 @@
-use super::{Angle, AngleLiteral};
+use crate::geometry::{Angle, AngleLiteral};
 use std::ops::{Bound, Range, RangeBounds, RangeFrom, RangeInclusive};
 
 /// An [Iterator] for [Angle].
@@ -90,8 +90,8 @@ impl IterableAngleRange for RangeFrom<Angle> {
 
 #[cfg(test)]
 mod tests {
-   use super::super::{Angle, AngleLiteral};
    use super::IterableAngleRange;
+   use crate::geometry::{Angle, AngleLiteral};
 
    #[test]
    fn iterate() {
