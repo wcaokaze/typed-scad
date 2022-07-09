@@ -1,6 +1,19 @@
 use crate::geometry::{Plane, Point, Vector};
 use crate::geometry::operators::Intersection;
 
+/// Line in 3D.
+///
+/// [Line::eq] returns `true` when 2 lines are equivalent.
+/// ```
+/// # use typed_scad::geometry::{Line, Point, SizeLiteral, Vector};
+/// let a = Line::new(&Point::new(0.mm(), 0.mm(), 0.mm()), &Vector::X_UNIT_VECTOR);
+/// let b = Line::new(&Point::new(1.mm(), 0.mm(), 0.mm()), &Vector::X_UNIT_VECTOR);
+/// assert_eq!(a, b);
+///
+/// let a = Line::new(&Point::ORIGIN, & Vector::X_UNIT_VECTOR);
+/// let b = Line::new(&Point::ORIGIN, &-Vector::X_UNIT_VECTOR);
+/// assert_eq!(a, b);
+/// ```
 #[derive(Clone, Copy, Debug)]
 pub struct Line {
    pub(in crate::geometry) point: Point,
@@ -39,8 +52,10 @@ impl Line {
 
 impl PartialEq for Line {
    fn eq(&self, other: &Line) -> bool {
-      self.vector == other.vector
-         && self.point() == other.point()
+      let same_direction = self.vector ==  other.vector
+                        || self.vector == -other.vector;
+
+      same_direction && self.point() == other.point()
    }
 }
 
@@ -101,6 +116,11 @@ mod tests {
       assert_eq!(
          Line::new(&Point::ORIGIN, &Vector::Z_UNIT_VECTOR),
          Line::new(&Point::new(0.mm(), 0.mm(), 4.mm()), &Vector::Z_UNIT_VECTOR)
+      );
+
+      assert_eq!(
+         Line::new(&Point::ORIGIN, & Vector::Z_UNIT_VECTOR),
+         Line::new(&Point::ORIGIN, &-Vector::Z_UNIT_VECTOR),
       );
 
       assert_ne!(

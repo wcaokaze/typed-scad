@@ -1,6 +1,19 @@
 use crate::geometry::{Line, Point, Size, Vector};
 use crate::geometry::operators::Intersection;
 
+/// Plane in 3D.
+///
+/// [Plane::eq] returns `true` when 2 planes are equivalent.
+/// ```
+/// # use typed_scad::geometry::{Plane, Point, SizeLiteral, Vector};
+/// let a = Plane::new(&Point::new(0.mm(), 0.mm(), 1.mm()), &Vector::X_UNIT_VECTOR);
+/// let b = Plane::new(&Point::new(0.mm(), 2.mm(), 2.mm()), &Vector::X_UNIT_VECTOR);
+/// assert_eq!(a, b);
+///
+/// let a = Plane::new(&Point::ORIGIN, & Vector::X_UNIT_VECTOR);
+/// let b = Plane::new(&Point::ORIGIN, &-Vector::X_UNIT_VECTOR);
+/// assert_eq!(a, b);
+/// ```
 #[derive(Clone, Copy, Debug)]
 pub struct Plane {
    pub(in crate::geometry) point: Point,
@@ -40,8 +53,10 @@ impl Plane {
 
 impl PartialEq for Plane {
    fn eq(&self, other: &Plane) -> bool {
-      self.normal_vector == other.normal_vector
-         && self.point() == other.point()
+      let same_direction = self.normal_vector ==  other.normal_vector
+                        || self.normal_vector == -other.normal_vector;
+
+      same_direction && self.point() == other.point()
    }
 }
 
@@ -213,6 +228,11 @@ mod tests {
       assert_eq!(
          Plane::new(&Point::ORIGIN, &Vector::Z_UNIT_VECTOR),
          Plane::new(&Point::new(3.mm(), 5.mm(), 0.mm()), &Vector::Z_UNIT_VECTOR)
+      );
+
+      assert_eq!(
+         Plane::new(&Point::ORIGIN, & Vector::Z_UNIT_VECTOR),
+         Plane::new(&Point::ORIGIN, &-Vector::Z_UNIT_VECTOR)
       );
 
       assert_ne!(
