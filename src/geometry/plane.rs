@@ -3,8 +3,8 @@ use crate::geometry::operators::Intersection;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Plane {
-   point: Point,
-   normal_vector: Vector
+   pub(in crate::geometry) point: Point,
+   pub(in crate::geometry) normal_vector: Vector
 }
 
 impl Plane {
@@ -29,6 +29,27 @@ impl Plane {
 
    pub const fn normal_vector(&self) -> &Vector {
       &self.normal_vector
+   }
+}
+
+impl Intersection<&Plane> for &Plane {
+   type Output = Line;
+   fn intersection(self, rhs: &Plane) -> Line {
+      self.intersection(*rhs)
+   }
+}
+
+impl Intersection<&Plane> for Plane {
+   type Output = Line;
+   fn intersection(self, rhs: &Plane) -> Line {
+      self.intersection(*rhs)
+   }
+}
+
+impl Intersection<Plane> for &Plane {
+   type Output = Line;
+   fn intersection(self, rhs: Plane) -> Line {
+      (*self).intersection(rhs)
    }
 }
 
@@ -90,6 +111,27 @@ impl Intersection<Plane> for Plane {
    }
 }
 
+impl Intersection<&Line> for &Plane {
+   type Output = Point;
+   fn intersection(self, rhs: &Line) -> Point {
+      self.intersection(*rhs)
+   }
+}
+
+impl Intersection<&Line> for Plane {
+   type Output = Point;
+   fn intersection(self, rhs: &Line) -> Point {
+      self.intersection(*rhs)
+   }
+}
+
+impl Intersection<Line> for &Plane {
+   type Output = Point;
+   fn intersection(self, rhs: Line) -> Point {
+      (*self).intersection(rhs)
+   }
+}
+
 impl Intersection<Line> for Plane {
    type Output = Point;
 
@@ -107,15 +149,15 @@ impl Intersection<Line> for Plane {
       );
 
       let p2 = (
-         rhs.point().x().to_millimeter(),
-         rhs.point().y().to_millimeter(),
-         rhs.point().z().to_millimeter()
+         rhs.point.x().to_millimeter(),
+         rhs.point.y().to_millimeter(),
+         rhs.point.z().to_millimeter()
       );
 
       let v2 = (
-         rhs.vector().x.to_millimeter(),
-         rhs.vector().y.to_millimeter(),
-         rhs.vector().z.to_millimeter()
+         rhs.vector.x.to_millimeter(),
+         rhs.vector.y.to_millimeter(),
+         rhs.vector.z.to_millimeter()
       );
 
       let t = ((p1.0 - p2.0) * v1.0 + (p1.1 - p2.1) * v1.1 + (p1.2 - p2.2) * v1.2) /
