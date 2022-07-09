@@ -1,3 +1,4 @@
+use crate::foundation::rough_fp::{rough_partial_cmp, rough_partial_eq};
 use crate::geometry::{IterableAngleRange, Size};
 use crate::geometry::unit::Unit;
 use std::cmp::Ordering;
@@ -134,22 +135,15 @@ impl Display for Angle {
    }
 }
 
-const D: f64 = 1e-10;
-
 impl PartialOrd for Angle {
    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-      match (self.0 < other.0 + D, self.0 > other.0 - D) {
-         (false, false) => None,
-         (false,  true) => Some(Ordering::Greater),
-         ( true, false) => Some(Ordering::Less),
-         ( true,  true) => Some(Ordering::Equal)
-      }
+      rough_partial_cmp(self.0, other.0)
    }
 }
 
 impl PartialEq for Angle {
    fn eq(&self, other: &Self) -> bool {
-      self.0 > other.0 - D && self.0 < other.0 + D
+      rough_partial_eq(self.0, other.0)
    }
 }
 
