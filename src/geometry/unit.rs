@@ -1,4 +1,5 @@
 use std::marker::PhantomData;
+use std::ops::{Add, Sub};
 
 /// Type which has a value as some unit.
 ///
@@ -147,6 +148,20 @@ impl<U: Unit, const N: i32> ExponentialUnit<U, N> {
 }
 
 impl<U: Unit, const N: i32> Unit for Exp<U, N> {}
+
+impl<U: Unit, const N: i32> Add for Exp<U, N> where U: Add {
+   type Output = Exp<U, N>;
+   fn add(self, rhs: Exp<U, N>) -> Exp<U, N> {
+      unsafe { Exp::new(self.0 + rhs.0) }
+   }
+}
+
+impl<U: Unit, const N: i32> Sub for Exp<U, N> where U: Sub {
+   type Output = Exp<U, N>;
+   fn sub(self, rhs: Exp<U, N>) -> Exp<U, N> {
+      unsafe { Exp::new(self.0 - rhs.0) }
+   }
+}
 
 #[cfg(test)]
 mod tests {
