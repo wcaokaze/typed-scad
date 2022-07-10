@@ -165,41 +165,25 @@ impl Intersection<Line> for Plane {
    type Output = Point;
 
    fn intersection(self, rhs: Line) -> Point {
-      let p1 = (
-         self.point.x(),
-         self.point.y(),
-         self.point.z()
-      );
+      let inner_product =
+         self.normal_vector.x * rhs.vector.x +
+         self.normal_vector.y * rhs.vector.y +
+         self.normal_vector.z * rhs.vector.z;
 
-      let v1 = (
-         self.normal_vector.x,
-         self.normal_vector.y,
-         self.normal_vector.z
-      );
-
-      let p2 = (
-         rhs.point.x(),
-         rhs.point.y(),
-         rhs.point.z()
-      );
-
-      let v2 = (
-         rhs.vector.x,
-         rhs.vector.y,
-         rhs.vector.z
-      );
-
-      let inner_product = v1.0 * v2.0 + v1.1 * v2.1 + v1.2 * v2.2;
       if rough_partial_eq(inner_product.0, 0.0) {
          panic!("The specified plane and line don't have an intersection.");
       }
-      let t = ((p1.0 - p2.0) * v1.0 + (p1.1 - p2.1) * v1.1 + (p1.2 - p2.2) * v1.2)
-         / inner_product;
+
+      let t = (
+         (self.point.x() - rhs.point.x()) * self.normal_vector.x +
+         (self.point.y() - rhs.point.y()) * self.normal_vector.y +
+         (self.point.z() - rhs.point.z()) * self.normal_vector.z
+      ) / inner_product;
 
       Point::new(
-         p2.0 + t * v2.0,
-         p2.1 + t * v2.1,
-         p2.2 + t * v2.2
+         rhs.point.x() + t * rhs.vector.x,
+         rhs.point.y() + t * rhs.vector.y,
+         rhs.point.z() + t * rhs.vector.z
       )
    }
 }
