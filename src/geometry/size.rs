@@ -151,6 +151,20 @@ macro_rules! mul {
    )+)
 }
 
+impl<U: Unit> Mul<Exp<U, 0>> for Size {
+   type Output = Size;
+   fn mul(self, rhs: Exp<U, 0>) -> Size {
+      self * rhs.0
+   }
+}
+
+impl<U: Unit> Mul<Size> for Exp<U, 0> {
+   type Output = Size;
+   fn mul(self, rhs: Size) -> Size {
+      rhs * self
+   }
+}
+
 mul!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64);
 
 impl Mul<Size> for Size {

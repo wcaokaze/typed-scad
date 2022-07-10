@@ -123,6 +123,7 @@ impl<
 
 /// exponentiation of unit. e.g. `Exp<Size, 2>` for mm².
 /// See also [DerivedUnit].
+#[derive(Clone, Copy, Debug, Default)]
 pub struct ExponentialUnit<U: Unit, const N: i32>(pub f64, PhantomData<U>);
 pub type Exp<U, const N: i32> = ExponentialUnit<U, N>;
 
