@@ -1,6 +1,6 @@
 use crate::foundation::rough_fp::{rough_partial_cmp, rough_partial_eq};
 use crate::geometry::IterableSizeRange;
-use crate::geometry::unit::Unit;
+use crate::geometry::unit::{Exp, Unit};
 use std::cmp::Ordering;
 use std::fmt::{self, Display, Formatter};
 use std::iter::Sum;
@@ -152,6 +152,13 @@ macro_rules! mul {
 }
 
 mul!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64);
+
+impl Mul<Size> for Size {
+   type Output = Exp<Size, 2>;
+   fn mul(self, rhs: Size) -> Exp<Size, 2> {
+      unsafe { Exp::new(self.0 * rhs.0) }
+   }
+}
 
 macro_rules! div {
    ($($t:ty),+) => ($(

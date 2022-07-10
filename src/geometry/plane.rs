@@ -166,40 +166,40 @@ impl Intersection<Line> for Plane {
 
    fn intersection(self, rhs: Line) -> Point {
       let p1 = (
-         self.point.x().to_millimeter(),
-         self.point.y().to_millimeter(),
-         self.point.z().to_millimeter()
+         self.point.x(),
+         self.point.y(),
+         self.point.z()
       );
 
       let v1 = (
-         self.normal_vector.x.to_millimeter(),
-         self.normal_vector.y.to_millimeter(),
-         self.normal_vector.z.to_millimeter()
+         self.normal_vector.x,
+         self.normal_vector.y,
+         self.normal_vector.z
       );
 
       let p2 = (
-         rhs.point.x().to_millimeter(),
-         rhs.point.y().to_millimeter(),
-         rhs.point.z().to_millimeter()
+         rhs.point.x(),
+         rhs.point.y(),
+         rhs.point.z()
       );
 
       let v2 = (
-         rhs.vector.x.to_millimeter(),
-         rhs.vector.y.to_millimeter(),
-         rhs.vector.z.to_millimeter()
+         rhs.vector.x,
+         rhs.vector.y,
+         rhs.vector.z
       );
 
-      let inner_product = v1.0 * v2.0 + v1.1 * v2.1 + v1.2 * v2.2;
+      let inner_product = (v1.0 * v2.0).0 + (v1.1 * v2.1).0 + (v1.2 * v2.2).0;
       if rough_partial_eq(inner_product, 0.0) {
          panic!("The specified plane and line don't have an intersection.");
       }
-      let t = ((p1.0 - p2.0) * v1.0 + (p1.1 - p2.1) * v1.1 + (p1.2 - p2.2) * v1.2)
+      let t = (((p1.0 - p2.0) * v1.0).0 + ((p1.1 - p2.1) * v1.1).0 + ((p1.2 - p2.2) * v1.2).0)
          / inner_product;
 
       Point::new(
-         Size::millimeter(p2.0 + t * v2.0),
-         Size::millimeter(p2.1 + t * v2.1),
-         Size::millimeter(p2.2 + t * v2.2)
+         p2.0 + t * v2.0,
+         p2.1 + t * v2.1,
+         p2.2 + t * v2.2
       )
    }
 }
