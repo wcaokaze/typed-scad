@@ -73,13 +73,9 @@ impl Vector {
    }
 
    pub fn inner_product(&self, other: &Vector) -> Exp<Size, 2> {
-      unsafe {
-         Exp::new(
-            self.x.to_millimeter() * other.x.to_millimeter() +
-            self.y.to_millimeter() * other.y.to_millimeter() +
-            self.z.to_millimeter() * other.z.to_millimeter()
-         )
-      }
+      self.x * other.x +
+      self.y * other.y +
+      self.z * other.z
    }
 
    pub fn angle_with(&self, other: &Vector) -> Angle {

@@ -167,9 +167,7 @@ impl Intersection<Line> for Plane {
 
    fn intersection(self, rhs: Line) -> Point {
       let inner_product: Exp<Size, 2>
-         = self.normal_vector.x * rhs.vector.x
-         + self.normal_vector.y * rhs.vector.y
-         + self.normal_vector.z * rhs.vector.z;
+         = self.normal_vector.inner_product(&rhs.vector);
 
       if rough_partial_eq(inner_product.0, 0.0) {
          panic!("The specified plane and line don't have an intersection.");
