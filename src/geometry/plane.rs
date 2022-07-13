@@ -174,16 +174,18 @@ impl Intersection<Line> for Plane {
          panic!("The specified plane and line don't have an intersection.");
       }
 
-      let t = (
-         (self.point.x() - rhs.point.x()) * self.normal_vector.x +
-         (self.point.y() - rhs.point.y()) * self.normal_vector.y +
-         (self.point.z() - rhs.point.z()) * self.normal_vector.z
-      ) / inner_product;
+      let t: f64 = Into::into(
+         (
+            (self.point.x() - rhs.point.x()) * self.normal_vector.x +
+            (self.point.y() - rhs.point.y()) * self.normal_vector.y +
+            (self.point.z() - rhs.point.z()) * self.normal_vector.z
+         ) / inner_product
+      );
 
       Point::new(
-         rhs.point.x() + (t * rhs.vector.x).into(),
-         rhs.point.y() + (t * rhs.vector.y).into(),
-         rhs.point.z() + (t * rhs.vector.z).into()
+         rhs.point.x() + t * rhs.vector.x,
+         rhs.point.y() + t * rhs.vector.y,
+         rhs.point.z() + t * rhs.vector.z
       )
    }
 }
