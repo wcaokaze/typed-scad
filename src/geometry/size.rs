@@ -153,31 +153,6 @@ macro_rules! mul {
 
 mul!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64);
 
-impl Mul<Size> for Size {
-   type Output = Exp<Size, 2>;
-   fn mul(self, rhs: Size) -> Exp<Size, 2> {
-      unsafe { Exp::new(self.0 * rhs.0) }
-   }
-}
-
-impl<const N: i32> Mul<Size> for Exp<Size, N>
-   where Exp<Size, {N + 1}>: Sized
-{
-   type Output = Exp<Size, {N + 1}>;
-   fn mul(self, rhs: Size) -> Self::Output {
-      unsafe { Exp::new(self.0 * rhs.0) }
-   }
-}
-
-impl<const N: i32> Div<Size> for Exp<Size, N>
-   where Exp<Size, {N - 1}>: Sized
-{
-   type Output = Exp<Size, {N - 1}>;
-   fn div(self, rhs: Size) -> Self::Output {
-      unsafe { Exp::new(self.0 / rhs.0) }
-   }
-}
-
 macro_rules! div {
    ($($t:ty),+) => ($(
       impl Div<$t> for Size {
@@ -212,6 +187,43 @@ impl Neg for Size {
 }
 
 impl Unit for Size {}
+
+impl Mul<Size> for Size {
+   type Output = Exp<Size, 2>;
+   fn mul(self, rhs: Size) -> Exp<Size, 2> {
+      unsafe { Exp::new(self.0 * rhs.0) }
+   }
+}
+
+impl<const N: i32> Mul<Size> for Exp<Size, N>
+   where Exp<Size, {N + 1}>: Sized
+{
+   type Output = Exp<Size, {N + 1}>;
+   fn mul(self, rhs: Size) -> Self::Output {
+      unsafe { Exp::new(self.0 * rhs.0) }
+   }
+}
+
+impl<const N: i32> Div<Size> for Exp<Size, N>
+   where Exp<Size, {N - 1}>: Sized
+{
+   type Output = Exp<Size, {N - 1}>;
+   fn div(self, rhs: Size) -> Self::Output {
+      unsafe { Exp::new(self.0 / rhs.0) }
+   }
+}
+
+impl Into<f64> for Exp<Size, 0> {
+   fn into(self) -> f64 {
+      self.0
+   }
+}
+
+impl Into<Size> for Exp<Size, 1> {
+   fn into(self) -> Size {
+      Size(self.0)
+   }
+}
 
 /// Type that can make [Size] with `mm()` postfix.
 ///

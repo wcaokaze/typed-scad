@@ -181,9 +181,9 @@ impl Intersection<Line> for Plane {
       ) / inner_product;
 
       Point::new(
-         rhs.point.x() + Size::millimeter((t * rhs.vector.x).0),
-         rhs.point.y() + Size::millimeter((t * rhs.vector.y).0),
-         rhs.point.z() + Size::millimeter((t * rhs.vector.z).0)
+         rhs.point.x() + (t * rhs.vector.x).into(),
+         rhs.point.y() + (t * rhs.vector.y).into(),
+         rhs.point.z() + (t * rhs.vector.z).into()
       )
    }
 }
