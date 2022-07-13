@@ -1,6 +1,7 @@
 use crate::foundation::rough_fp::rough_partial_eq;
 use crate::geometry::{Line, Point, Size, Vector};
 use crate::geometry::operators::Intersection;
+use crate::geometry::unit::Exp;
 
 /// Plane in 3D.
 ///
@@ -86,29 +87,10 @@ impl Intersection<Plane> for Plane {
    type Output = Line;
 
    fn intersection(self, rhs: Plane) -> Line {
-      let p1 = (
-         self.point.x().to_millimeter(),
-         self.point.y().to_millimeter(),
-         self.point.z().to_millimeter()
-      );
-
-      let v1 = (
-         self.normal_vector.x.to_millimeter(),
-         self.normal_vector.y.to_millimeter(),
-         self.normal_vector.z.to_millimeter()
-      );
-
-      let p2 = (
-         rhs.point.x().to_millimeter(),
-         rhs.point.y().to_millimeter(),
-         rhs.point.z().to_millimeter()
-      );
-
-      let v2 = (
-         rhs.normal_vector.x.to_millimeter(),
-         rhs.normal_vector.y.to_millimeter(),
-         rhs.normal_vector.z.to_millimeter()
-      );
+      let sp = self.point;
+      let sv = self.normal_vector;
+      let rp = rhs.point;
+      let rv = rhs.normal_vector;
 
       let vector = self.normal_vector.vector_product(&rhs.normal_vector);
 
@@ -117,19 +99,19 @@ impl Intersection<Plane> for Plane {
          // can solved from `self`, `rhs`, and X=0 as simultaneous equations.
          Point::new(
             Size::ZERO,
-            Size::millimeter(((v1.0 * v2.2 * p1.0) - (v1.2 * v2.0 * p2.0) + (v1.1 * v2.2 * p1.1) - (v1.2 * v2.1 * p2.1) + (v1.2 * v2.2 * p1.2) - (v1.2 * v2.2 * p2.2)) /  (v1.1 * v2.2 - v1.2 * v2.1)),
-            Size::millimeter(((v1.2 * v2.1 * p1.2) - (v1.1 * v2.2 * p2.2) + (v1.0 * v2.1 * p1.0) - (v1.1 * v2.0 * p2.0) + (v1.1 * v2.1 * p1.1) - (v1.1 * v2.1 * p2.1)) / -(v1.1 * v2.2 - v1.2 * v2.1))
+            (((sv.x * rv.z * sp.x()) - (sv.z * rv.x * rp.x()) + (sv.y * rv.z * sp.y()) - (sv.z * rv.y * rp.y()) + (sv.z * rv.z * sp.z()) - (sv.z * rv.z * rp.z())) /  (sv.y * rv.z - sv.z * rv.y)).into(),
+            (((sv.z * rv.y * sp.z()) - (sv.y * rv.z * rp.z()) + (sv.x * rv.y * sp.x()) - (sv.y * rv.x * rp.x()) + (sv.y * rv.y * sp.y()) - (sv.y * rv.y * rp.y())) / -(sv.y * rv.z - sv.z * rv.y)).into()
          )
       } else if vector.y != Size::ZERO {
          Point::new(
-            Size::millimeter(((v1.0 * v2.2 * p1.0) - (v1.2 * v2.0 * p2.0) + (v1.1 * v2.2 * p1.1) - (v1.2 * v2.1 * p2.1) + (v1.2 * v2.2 * p1.2) - (v1.2 * v2.2 * p2.2)) / -(v1.2 * v2.0 - v1.0 * v2.2)),
+            (((sv.x * rv.z * sp.x()) - (sv.z * rv.x * rp.x()) + (sv.y * rv.z * sp.y()) - (sv.z * rv.y * rp.y()) + (sv.z * rv.z * sp.z()) - (sv.z * rv.z * rp.z())) / -(sv.z * rv.x - sv.x * rv.z)).into(),
             Size::ZERO,
-            Size::millimeter(((v1.1 * v2.0 * p1.1) - (v1.0 * v2.1 * p2.1) + (v1.2 * v2.0 * p1.2) - (v1.0 * v2.2 * p2.2) + (v1.0 * v2.0 * p1.0) - (v1.0 * v2.0 * p2.0)) /  (v1.2 * v2.0 - v1.0 * v2.2))
+            (((sv.y * rv.x * sp.y()) - (sv.x * rv.y * rp.y()) + (sv.z * rv.x * sp.z()) - (sv.x * rv.z * rp.z()) + (sv.x * rv.x * sp.x()) - (sv.x * rv.x * rp.x())) /  (sv.z * rv.x - sv.x * rv.z)).into()
          )
       } else if vector.z != Size::ZERO {
          Point::new(
-            Size::millimeter(((v1.2 * v2.1 * p1.2) - (v1.1 * v2.2 * p2.2) + (v1.0 * v2.1 * p1.0) - (v1.1 * v2.0 * p2.0) + (v1.1 * v2.1 * p1.1) - (v1.1 * v2.1 * p2.1)) /  (v1.0 * v2.1 - v1.1 * v2.0)),
-            Size::millimeter(((v1.1 * v2.0 * p1.1) - (v1.0 * v2.1 * p2.1) + (v1.2 * v2.0 * p1.2) - (v2.2 * v1.0 * p2.2) + (v1.0 * v2.0 * p1.0) - (v1.0 * v2.0 * p2.0)) / -(v1.0 * v2.1 - v1.1 * v2.0)),
+            (((sv.z * rv.y * sp.z()) - (sv.y * rv.z * rp.z()) + (sv.x * rv.y * sp.x()) - (sv.y * rv.x * rp.x()) + (sv.y * rv.y * sp.y()) - (sv.y * rv.y * rp.y())) /  (sv.x * rv.y - sv.y * rv.x)).into(),
+            (((sv.y * rv.x * sp.y()) - (sv.x * rv.y * rp.y()) + (sv.z * rv.x * sp.z()) - (rv.z * sv.x * rp.z()) + (sv.x * rv.x * sp.x()) - (sv.x * rv.x * rp.x())) / -(sv.x * rv.y - sv.y * rv.x)).into(),
             Size::ZERO
          )
       } else {
@@ -165,41 +147,25 @@ impl Intersection<Line> for Plane {
    type Output = Point;
 
    fn intersection(self, rhs: Line) -> Point {
-      let p1 = (
-         self.point.x().to_millimeter(),
-         self.point.y().to_millimeter(),
-         self.point.z().to_millimeter()
-      );
+      let inner_product: Exp<Size, 2>
+         = self.normal_vector.inner_product(&rhs.vector);
 
-      let v1 = (
-         self.normal_vector.x.to_millimeter(),
-         self.normal_vector.y.to_millimeter(),
-         self.normal_vector.z.to_millimeter()
-      );
-
-      let p2 = (
-         rhs.point.x().to_millimeter(),
-         rhs.point.y().to_millimeter(),
-         rhs.point.z().to_millimeter()
-      );
-
-      let v2 = (
-         rhs.vector.x.to_millimeter(),
-         rhs.vector.y.to_millimeter(),
-         rhs.vector.z.to_millimeter()
-      );
-
-      let inner_product = v1.0 * v2.0 + v1.1 * v2.1 + v1.2 * v2.2;
-      if rough_partial_eq(inner_product, 0.0) {
+      if rough_partial_eq(inner_product.0, 0.0) {
          panic!("The specified plane and line don't have an intersection.");
       }
-      let t = ((p1.0 - p2.0) * v1.0 + (p1.1 - p2.1) * v1.1 + (p1.2 - p2.2) * v1.2)
-         / inner_product;
+
+      let t: f64 = Into::into(
+         (
+            (self.point.x() - rhs.point.x()) * self.normal_vector.x +
+            (self.point.y() - rhs.point.y()) * self.normal_vector.y +
+            (self.point.z() - rhs.point.z()) * self.normal_vector.z
+         ) / inner_product
+      );
 
       Point::new(
-         Size::millimeter(p2.0 + t * v2.0),
-         Size::millimeter(p2.1 + t * v2.1),
-         Size::millimeter(p2.2 + t * v2.2)
+         rhs.point.x() + t * rhs.vector.x,
+         rhs.point.y() + t * rhs.vector.y,
+         rhs.point.z() + t * rhs.vector.z
       )
    }
 }

@@ -1,6 +1,6 @@
 use crate::foundation::rough_fp::{rough_partial_cmp, rough_partial_eq};
 use crate::geometry::{IterableAngleRange, Size};
-use crate::geometry::unit::Unit;
+use crate::geometry::unit::{Exp, Unit};
 use std::cmp::Ordering;
 use std::fmt::{self, Display, Formatter};
 use std::ops::{
@@ -233,6 +233,18 @@ impl Neg for Angle {
 }
 
 impl Unit for Angle {}
+
+impl Into<f64> for Exp<Angle, 0> {
+   fn into(self) -> f64 {
+      self.0
+   }
+}
+
+impl Into<Angle> for Exp<Angle, 1> {
+   fn into(self) -> Angle {
+      Angle(self.0)
+   }
+}
 
 /// Type that can make [Angle] with `deg()` postfix.
 ///

@@ -1,6 +1,6 @@
 use crate::foundation::rough_fp::{rough_partial_cmp, rough_partial_eq};
 use crate::geometry::IterableSizeRange;
-use crate::geometry::unit::Unit;
+use crate::geometry::unit::{Exp, Unit};
 use std::cmp::Ordering;
 use std::fmt::{self, Display, Formatter};
 use std::iter::Sum;
@@ -187,6 +187,43 @@ impl Neg for Size {
 }
 
 impl Unit for Size {}
+
+impl Mul<Size> for Size {
+   type Output = Exp<Size, 2>;
+   fn mul(self, rhs: Size) -> Exp<Size, 2> {
+      unsafe { Exp::new(self.0 * rhs.0) }
+   }
+}
+
+impl<const N: i32> Mul<Size> for Exp<Size, N>
+   where Exp<Size, {N + 1}>: Sized
+{
+   type Output = Exp<Size, {N + 1}>;
+   fn mul(self, rhs: Size) -> Self::Output {
+      unsafe { Exp::new(self.0 * rhs.0) }
+   }
+}
+
+impl<const N: i32> Div<Size> for Exp<Size, N>
+   where Exp<Size, {N - 1}>: Sized
+{
+   type Output = Exp<Size, {N - 1}>;
+   fn div(self, rhs: Size) -> Self::Output {
+      unsafe { Exp::new(self.0 / rhs.0) }
+   }
+}
+
+impl Into<f64> for Exp<Size, 0> {
+   fn into(self) -> f64 {
+      self.0
+   }
+}
+
+impl Into<Size> for Exp<Size, 1> {
+   fn into(self) -> Size {
+      Size(self.0)
+   }
+}
 
 /// Type that can make [Size] with `mm()` postfix.
 ///

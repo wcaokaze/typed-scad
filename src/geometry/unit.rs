@@ -1,4 +1,5 @@
 use std::marker::PhantomData;
+use std::ops::{Add, Div, Mul, Neg, Sub};
 
 /// Type which has a value as some unit.
 ///
@@ -122,6 +123,7 @@ impl<
 
 /// exponentiation of unit. e.g. `Exp<Size, 2>` for mm².
 /// See also [DerivedUnit].
+#[derive(Clone, Copy, Debug, Default)]
 pub struct ExponentialUnit<U: Unit, const N: i32>(pub f64, PhantomData<U>);
 pub type Exp<U, const N: i32> = ExponentialUnit<U, N>;
 
@@ -148,6 +150,47 @@ impl<U: Unit, const N: i32> ExponentialUnit<U, N> {
 
 impl<U: Unit, const N: i32> Unit for Exp<U, N> {}
 
+impl<U: Unit, const N: i32> Add for Exp<U, N> where U: Add {
+   type Output = Exp<U, N>;
+   fn add(self, rhs: Exp<U, N>) -> Exp<U, N> {
+      unsafe { Exp::new(self.0 + rhs.0) }
+   }
+}
+
+impl<U: Unit, const N: i32> Sub for Exp<U, N> where U: Sub {
+   type Output = Exp<U, N>;
+   fn sub(self, rhs: Exp<U, N>) -> Exp<U, N> {
+      unsafe { Exp::new(self.0 - rhs.0) }
+   }
+}
+
+impl<U: Unit, const NA: i32, const NB: i32>
+   Mul<Exp<U, NB>> for Exp<U, NA>
+   where Exp<U, {NA + NB}>: Sized
+{
+   type Output = Exp<U, {NA + NB}>;
+   fn mul(self, rhs: Exp<U, NB>) -> Self::Output {
+      unsafe { Exp::new(self.0 * rhs.0) }
+   }
+}
+
+impl<U: Unit, const NA: i32, const NB: i32>
+   Div<Exp<U, NB>> for Exp<U, NA>
+   where Exp<U, {NA - NB}>: Sized
+{
+   type Output = Exp<U, {NA - NB}>;
+   fn div(self, rhs: Exp<U, NB>) -> Self::Output {
+      unsafe { Exp::new(self.0 / rhs.0) }
+   }
+}
+
+impl<U: Unit, const N: i32> Neg for Exp<U, N> {
+   type Output = Exp<U, N>;
+   fn neg(self) -> Exp<U, N> {
+      unsafe { Exp::new(-self.0) }
+   }
+}
+
 #[cfg(test)]
 mod tests {
    use crate::geometry::Size;
@@ -160,5 +203,28 @@ mod tests {
 
       let exp: Exp<Size, 2> = unsafe { Exp::new(42.0) };
       assert_eq!(exp.0, 42.0);
+   }
+
+   #[test]
+   fn exp_operators() {
+      let a: Exp<Size, 3> = unsafe { Exp::new(1.0) };
+      let b: Exp<Size, 3> = unsafe { Exp::new(4.0) };
+      let c: Exp<Size, 3> = a + b;
+      assert_eq!(c.0, 5.0);
+
+      let a: Exp<Size, 3> = unsafe { Exp::new(5.0) };
+      let b: Exp<Size, 3> = unsafe { Exp::new(4.0) };
+      let c: Exp<Size, 3> = a - b;
+      assert_eq!(c.0, 1.0);
+
+      let a: Exp<Size, 3> = unsafe { Exp::new(2.0) };
+      let b: Exp<Size, 4> = unsafe { Exp::new(5.0) };
+      let c: Exp<Size, 7> = a * b;
+      assert_eq!(c.0, 10.0);
+
+      let a: Exp<Size, 7> = unsafe { Exp::new(10.0) };
+      let b: Exp<Size, 4> = unsafe { Exp::new(5.0) };
+      let c: Exp<Size, 3> = a / b;
+      assert_eq!(c.0, 2.0);
    }
 }
