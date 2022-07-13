@@ -87,29 +87,10 @@ impl Intersection<Plane> for Plane {
    type Output = Line;
 
    fn intersection(self, rhs: Plane) -> Line {
-      let p1 = (
-         self.point.x(),
-         self.point.y(),
-         self.point.z()
-      );
-
-      let v1 = (
-         self.normal_vector.x,
-         self.normal_vector.y,
-         self.normal_vector.z
-      );
-
-      let p2 = (
-         rhs.point.x(),
-         rhs.point.y(),
-         rhs.point.z()
-      );
-
-      let v2 = (
-         rhs.normal_vector.x,
-         rhs.normal_vector.y,
-         rhs.normal_vector.z
-      );
+      let sp = self.point;
+      let sv = self.normal_vector;
+      let rp = rhs.point;
+      let rv = rhs.normal_vector;
 
       let vector = self.normal_vector.vector_product(&rhs.normal_vector);
 
@@ -118,19 +99,19 @@ impl Intersection<Plane> for Plane {
          // can solved from `self`, `rhs`, and X=0 as simultaneous equations.
          Point::new(
             Size::ZERO,
-            (((v1.0 * v2.2 * p1.0) - (v1.2 * v2.0 * p2.0) + (v1.1 * v2.2 * p1.1) - (v1.2 * v2.1 * p2.1) + (v1.2 * v2.2 * p1.2) - (v1.2 * v2.2 * p2.2)) /  (v1.1 * v2.2 - v1.2 * v2.1)).into(),
-            (((v1.2 * v2.1 * p1.2) - (v1.1 * v2.2 * p2.2) + (v1.0 * v2.1 * p1.0) - (v1.1 * v2.0 * p2.0) + (v1.1 * v2.1 * p1.1) - (v1.1 * v2.1 * p2.1)) / -(v1.1 * v2.2 - v1.2 * v2.1)).into()
+            (((sv.x * rv.z * sp.x()) - (sv.z * rv.x * rp.x()) + (sv.y * rv.z * sp.y()) - (sv.z * rv.y * rp.y()) + (sv.z * rv.z * sp.z()) - (sv.z * rv.z * rp.z())) /  (sv.y * rv.z - sv.z * rv.y)).into(),
+            (((sv.z * rv.y * sp.z()) - (sv.y * rv.z * rp.z()) + (sv.x * rv.y * sp.x()) - (sv.y * rv.x * rp.x()) + (sv.y * rv.y * sp.y()) - (sv.y * rv.y * rp.y())) / -(sv.y * rv.z - sv.z * rv.y)).into()
          )
       } else if vector.y != Size::ZERO {
          Point::new(
-            (((v1.0 * v2.2 * p1.0) - (v1.2 * v2.0 * p2.0) + (v1.1 * v2.2 * p1.1) - (v1.2 * v2.1 * p2.1) + (v1.2 * v2.2 * p1.2) - (v1.2 * v2.2 * p2.2)) / -(v1.2 * v2.0 - v1.0 * v2.2)).into(),
+            (((sv.x * rv.z * sp.x()) - (sv.z * rv.x * rp.x()) + (sv.y * rv.z * sp.y()) - (sv.z * rv.y * rp.y()) + (sv.z * rv.z * sp.z()) - (sv.z * rv.z * rp.z())) / -(sv.z * rv.x - sv.x * rv.z)).into(),
             Size::ZERO,
-            (((v1.1 * v2.0 * p1.1) - (v1.0 * v2.1 * p2.1) + (v1.2 * v2.0 * p1.2) - (v1.0 * v2.2 * p2.2) + (v1.0 * v2.0 * p1.0) - (v1.0 * v2.0 * p2.0)) /  (v1.2 * v2.0 - v1.0 * v2.2)).into()
+            (((sv.y * rv.x * sp.y()) - (sv.x * rv.y * rp.y()) + (sv.z * rv.x * sp.z()) - (sv.x * rv.z * rp.z()) + (sv.x * rv.x * sp.x()) - (sv.x * rv.x * rp.x())) /  (sv.z * rv.x - sv.x * rv.z)).into()
          )
       } else if vector.z != Size::ZERO {
          Point::new(
-            (((v1.2 * v2.1 * p1.2) - (v1.1 * v2.2 * p2.2) + (v1.0 * v2.1 * p1.0) - (v1.1 * v2.0 * p2.0) + (v1.1 * v2.1 * p1.1) - (v1.1 * v2.1 * p2.1)) /  (v1.0 * v2.1 - v1.1 * v2.0)).into(),
-            (((v1.1 * v2.0 * p1.1) - (v1.0 * v2.1 * p2.1) + (v1.2 * v2.0 * p1.2) - (v2.2 * v1.0 * p2.2) + (v1.0 * v2.0 * p1.0) - (v1.0 * v2.0 * p2.0)) / -(v1.0 * v2.1 - v1.1 * v2.0)).into(),
+            (((sv.z * rv.y * sp.z()) - (sv.y * rv.z * rp.z()) + (sv.x * rv.y * sp.x()) - (sv.y * rv.x * rp.x()) + (sv.y * rv.y * sp.y()) - (sv.y * rv.y * rp.y())) /  (sv.x * rv.y - sv.y * rv.x)).into(),
+            (((sv.y * rv.x * sp.y()) - (sv.x * rv.y * rp.y()) + (sv.z * rv.x * sp.z()) - (rv.z * sv.x * rp.z()) + (sv.x * rv.x * sp.x()) - (sv.x * rv.x * rp.x())) / -(sv.x * rv.y - sv.y * rv.x)).into(),
             Size::ZERO
          )
       } else {
