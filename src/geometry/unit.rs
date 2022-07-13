@@ -1,5 +1,5 @@
 use std::marker::PhantomData;
-use std::ops::{Add, Div, Mul, Sub};
+use std::ops::{Add, Div, Mul, Neg, Sub};
 
 /// Type which has a value as some unit.
 ///
@@ -181,6 +181,13 @@ impl<U: Unit, const NA: i32, const NB: i32>
    type Output = Exp<U, {NA - NB}>;
    fn div(self, rhs: Exp<U, NB>) -> Self::Output {
       unsafe { Exp::new(self.0 / rhs.0) }
+   }
+}
+
+impl<U: Unit, const N: i32> Neg for Exp<U, N> {
+   type Output = Exp<U, N>;
+   fn neg(self) -> Exp<U, N> {
+      unsafe { Exp::new(-self.0) }
    }
 }
 

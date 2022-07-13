@@ -151,26 +151,30 @@ macro_rules! mul {
    )+)
 }
 
-impl<U: Unit> Mul<Exp<U, 0>> for Size {
-   type Output = Size;
-   fn mul(self, rhs: Exp<U, 0>) -> Size {
-      self * rhs.0
-   }
-}
-
-impl<U: Unit> Mul<Size> for Exp<U, 0> {
-   type Output = Size;
-   fn mul(self, rhs: Size) -> Size {
-      rhs * self
-   }
-}
-
 mul!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64);
 
 impl Mul<Size> for Size {
    type Output = Exp<Size, 2>;
    fn mul(self, rhs: Size) -> Exp<Size, 2> {
       unsafe { Exp::new(self.0 * rhs.0) }
+   }
+}
+
+impl<const N: i32> Mul<Size> for Exp<Size, N>
+   where Exp<Size, {N + 1}>: Sized
+{
+   type Output = Exp<Size, {N + 1}>;
+   fn mul(self, rhs: Size) -> Self::Output {
+      unsafe { Exp::new(self.0 * rhs.0) }
+   }
+}
+
+impl<const N: i32> Div<Size> for Exp<Size, N>
+   where Exp<Size, {N - 1}>: Sized
+{
+   type Output = Exp<Size, {N - 1}>;
+   fn div(self, rhs: Size) -> Self::Output {
+      unsafe { Exp::new(self.0 / rhs.0) }
    }
 }
 

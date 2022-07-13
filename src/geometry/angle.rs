@@ -1,6 +1,6 @@
 use crate::foundation::rough_fp::{rough_partial_cmp, rough_partial_eq};
 use crate::geometry::{IterableAngleRange, Size};
-use crate::geometry::unit::{Exp, Unit};
+use crate::geometry::unit::Unit;
 use std::cmp::Ordering;
 use std::fmt::{self, Display, Formatter};
 use std::ops::{
@@ -195,20 +195,6 @@ macro_rules! mul {
          }
       }
    )+)
-}
-
-impl<U: Unit> Mul<Exp<U, 0>> for Angle {
-   type Output = Angle;
-   fn mul(self, rhs: Exp<U, 0>) -> Angle {
-      self * rhs.0
-   }
-}
-
-impl<U: Unit> Mul<Angle> for Exp<U, 0> {
-   type Output = Angle;
-   fn mul(self, rhs: Angle) -> Angle {
-      rhs * self
-   }
 }
 
 mul!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64);
