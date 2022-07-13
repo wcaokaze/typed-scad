@@ -1,6 +1,7 @@
 use crate::foundation::rough_fp::rough_partial_eq;
 use crate::geometry::{Line, Point, Size, Vector};
 use crate::geometry::operators::Intersection;
+use crate::geometry::unit::Exp;
 
 /// Plane in 3D.
 ///
@@ -165,10 +166,10 @@ impl Intersection<Line> for Plane {
    type Output = Point;
 
    fn intersection(self, rhs: Line) -> Point {
-      let inner_product =
-         self.normal_vector.x * rhs.vector.x +
-         self.normal_vector.y * rhs.vector.y +
-         self.normal_vector.z * rhs.vector.z;
+      let inner_product: Exp<Size, 2>
+         = self.normal_vector.x * rhs.vector.x
+         + self.normal_vector.y * rhs.vector.y
+         + self.normal_vector.z * rhs.vector.z;
 
       if rough_partial_eq(inner_product.0, 0.0) {
          panic!("The specified plane and line don't have an intersection.");
