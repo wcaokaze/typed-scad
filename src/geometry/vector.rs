@@ -53,18 +53,13 @@ impl Vector {
    }
 
    pub fn vector_product(&self, other: &Vector) -> Vector {
-      let ax = self.x.to_millimeter();
-      let ay = self.y.to_millimeter();
-      let az = self.z.to_millimeter();
-      let bx = other.x.to_millimeter();
-      let by = other.y.to_millimeter();
-      let bz = other.z.to_millimeter();
-
-      Vector::new(
-         Size::millimeter(ay * bz - az * by),
-         Size::millimeter(az * bx - ax * bz),
-         Size::millimeter(ax * by - ay * bx)
-      )
+      unsafe {
+         Vector::new(
+            (self.y * other.z - self.z * other.y).operate_as::<Size, 1>().into(),
+            (self.z * other.x - self.x * other.z).operate_as::<Size, 1>().into(),
+            (self.x * other.y - self.y * other.x).operate_as::<Size, 1>().into()
+         )
+      }
    }
 
    pub fn inner_product(&self, other: &Vector) -> Exp<Size, 2> {

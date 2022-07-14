@@ -146,6 +146,12 @@ impl<U: Unit, const N: i32> ExponentialUnit<U, N> {
    pub unsafe fn new(value: f64) -> ExponentialUnit<U, N> {
       ExponentialUnit(value, PhantomData)
    }
+
+   pub unsafe fn operate_as<RU: Unit, const RN: i32>(self)
+      -> ExponentialUnit<RU, RN>
+   {
+      ExponentialUnit(self.0, PhantomData)
+   }
 }
 
 impl<U: Unit, const N: i32> Unit for Exp<U, N> {}
