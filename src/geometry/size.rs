@@ -35,7 +35,9 @@ use std::ops::{
 /// assert_eq!(0.1.mm() * 3, 0.3.mm());
 /// ```
 #[derive(Clone, Copy, Debug, Default)]
-pub struct Size(f64);
+pub struct Size(
+   pub(crate) f64
+);
 
 impl Size {
    pub const ZERO: Size = Size(0.0);

@@ -98,7 +98,7 @@ impl Angle {
    }
 
    pub fn atan2(y: Size, x: Size) -> Angle {
-      Angle(f64::atan2(y.to_millimeter(), x.to_millimeter()))
+      Angle(f64::atan2(y.0, x.0))
    }
 
    pub fn abs(self) -> Angle {

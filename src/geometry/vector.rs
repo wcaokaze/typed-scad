@@ -46,9 +46,9 @@ impl Vector {
       }
 
       Vector::new(
-         Size::millimeter(self.x.to_millimeter() / norm.to_millimeter()),
-         Size::millimeter(self.y.to_millimeter() / norm.to_millimeter()),
-         Size::millimeter(self.z.to_millimeter() / norm.to_millimeter())
+         Size(self.x.0 / norm.0),
+         Size(self.y.0 / norm.0),
+         Size(self.z.0 / norm.0)
       )
    }
 
@@ -70,8 +70,7 @@ impl Vector {
 
    pub fn angle_with(&self, other: &Vector) -> Angle {
       Angle::acos(
-         self.inner_product(other).0
-            / (self.norm().to_millimeter() * other.norm().to_millimeter())
+         (self.inner_product(other) / (self.norm() * other.norm())).into()
       )
    }
 }
