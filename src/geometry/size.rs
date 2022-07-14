@@ -188,6 +188,12 @@ impl Neg for Size {
 
 impl Unit for Size {}
 
+impl Exp<Size, 2> {
+   pub fn sqrt(self) -> Size {
+      Size(self.0.sqrt())
+   }
+}
+
 impl Mul<Size> for Size {
    type Output = Exp<Size, 2>;
    fn mul(self, rhs: Size) -> Exp<Size, 2> {

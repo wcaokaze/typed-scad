@@ -35,12 +35,7 @@ impl Vector {
    }
 
    pub fn norm(&self) -> Size {
-      let x = self.x.to_millimeter();
-      let y = self.y.to_millimeter();
-      let z = self.z.to_millimeter();
-
-      let norm = f64::sqrt(x * x + y * y + z * z);
-      Size::millimeter(norm)
+      (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
    }
 
    pub fn to_unit_vector(&self) -> Vector {
