@@ -1,6 +1,6 @@
-use crate::foundation::rough_fp::{rough_partial_cmp, rough_partial_eq};
 use crate::geometry::{IterableAngleRange, Size};
 use crate::geometry::unit::{Exp, Unit};
+use crate::math::rough_fp::{rough_partial_cmp, rough_partial_eq};
 use std::cmp::Ordering;
 use std::fmt::{self, Display, Formatter};
 use std::ops::{
