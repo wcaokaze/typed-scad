@@ -1,5 +1,4 @@
 pub mod operators;
-pub mod unit;
 
 mod angle;
 mod angle_iterator;

@@ -14,7 +14,7 @@ impl Unit for ! {}
 /// # Examples
 /// ```
 /// # use typed_scad::geometry::{Angle, AngleLiteral, Size, SizeLiteral};
-/// # use typed_scad::geometry::unit::{DerivedUnit, Exp, Unit};
+/// # use typed_scad::math::unit::{DerivedUnit, Exp, Unit};
 /// let _: DerivedUnit<Size, Angle>; // mm⋅rad
 /// let _: Exp<Size, 2>; // mm²
 /// let _: DerivedUnit<Size, Exp<Angle, -1>>; // mm/rad
@@ -84,7 +84,7 @@ impl<
    /// Be careful about type arguments.
    /// ```
    /// # use typed_scad::geometry::{Angle, Size, SizeLiteral};
-   /// # use typed_scad::geometry::unit::DerivedUnit;
+   /// # use typed_scad::math::unit::DerivedUnit;
    /// let size = 42.mm();
    ///
    /// let _: DerivedUnit<Size, Angle> = unsafe {
@@ -133,7 +133,7 @@ impl<U: Unit, const N: i32> ExponentialUnit<U, N> {
    /// Be careful about type arguments.
    /// ```
    /// # use typed_scad::geometry::{Size, SizeLiteral};
-   /// # use typed_scad::geometry::unit::Exp;
+   /// # use typed_scad::math::unit::Exp;
    /// let size = 42.mm();
    ///
    /// let _: Exp<Size, 3> = unsafe {

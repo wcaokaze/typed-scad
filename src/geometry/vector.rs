@@ -1,5 +1,5 @@
 use crate::geometry::{Angle, Size, SizeLiteral, Point};
-use crate::geometry::unit::Exp;
+use crate::math::unit::Exp;
 use std::iter::Sum;
 use std::ops::{
    Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign

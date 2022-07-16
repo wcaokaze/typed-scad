@@ -1,6 +1,6 @@
 use crate::geometry::IterableSizeRange;
-use crate::geometry::unit::{Exp, Unit};
 use crate::math::rough_fp::{rough_partial_cmp, rough_partial_eq};
+use crate::math::unit::{Exp, Unit};
 use std::cmp::Ordering;
 use std::fmt::{self, Display, Formatter};
 use std::iter::Sum;

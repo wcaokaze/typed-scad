@@ -1,7 +1,7 @@
 use crate::geometry::{Line, Point, Size, Vector};
 use crate::geometry::operators::Intersection;
-use crate::geometry::unit::Exp;
 use crate::math::rough_fp::rough_partial_eq;
+use crate::math::unit::Exp;
 
 /// Plane in 3D.
 ///
