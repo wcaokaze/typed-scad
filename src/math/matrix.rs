@@ -1,4 +1,4 @@
-use std::ops::{Add, Sub};
+use std::ops::{Add, Div, Mul, Sub};
 use crate::math::unit::Unit;
 
 #[derive(Debug)]
@@ -64,6 +64,38 @@ impl<U: Unit, const X: usize, const Y: usize> Sub for Matrix<U, X, Y>
             ya.zip(yb)
                .map(|(xa, xb)| xa - xb)
          });
+
+      Matrix(a)
+   }
+}
+
+impl<U: Unit, const X: usize, const Y: usize, Rhs> Mul<Rhs> for Matrix<U, X, Y>
+   where U: Mul<Rhs>,
+         U::Output: Unit,
+         Rhs: Copy
+{
+   type Output = Matrix<U::Output, X, Y>;
+   fn mul(self, rhs: Rhs) -> Self::Output {
+      let a = self.0
+         .map(|y|
+            y.map(|x| x * rhs)
+         );
+
+      Matrix(a)
+   }
+}
+
+impl<U: Unit, const X: usize, const Y: usize, Rhs> Div<Rhs> for Matrix<U, X, Y>
+   where U: Div<Rhs>,
+         U::Output: Unit,
+         Rhs: Copy
+{
+   type Output = Matrix<U::Output, X, Y>;
+   fn div(self, rhs: Rhs) -> Self::Output {
+      let a = self.0
+         .map(|y|
+            y.map(|x| x / rhs)
+         );
 
       Matrix(a)
    }
@@ -146,5 +178,53 @@ mod tests {
       let a: Matrix<Size, 0, 0> = Matrix([]);
       let b: Matrix<Size, 0, 0> = Matrix([]);
       assert_eq!(a - b, Matrix([]));
+   }
+
+   #[test]
+   fn mul() {
+      let a = Matrix([
+         [1.mm(), 2.mm(), 3.mm()],
+         [4.mm(), 5.mm(), 6.mm()]
+      ]);
+
+      let expected = Matrix([
+         [1.5.mm(), 3.mm(), 4.5.mm()],
+         [6.mm(), 7.5.mm(), 9.mm()]
+      ]);
+
+      assert_eq!(a * 1.5, expected);
+
+      let a = Matrix([[2.mm()]]);
+      assert_eq!(a * 2, Matrix([[4.mm()]]));
+
+      let a: Matrix<Size, 0, 1> = Matrix([[]]);
+      assert_eq!(a * 2, Matrix([[]]));
+
+      let a: Matrix<Size, 0, 0> = Matrix([]);
+      assert_eq!(a * 2, Matrix([]));
+   }
+
+   #[test]
+   fn div() {
+      let a = Matrix([
+         [3.mm(), 6.mm(), 9.mm()],
+         [1.5.mm(), 4.5.mm(), 7.5.mm()]
+      ]);
+
+      let expected = Matrix([
+         [2.mm(), 4.mm(), 6.mm()],
+         [1.mm(), 3.mm(), 5.mm()]
+      ]);
+
+      assert_eq!(a / 1.5, expected);
+
+      let a = Matrix([[4.mm()]]);
+      assert_eq!(a / 2, Matrix([[2.mm()]]));
+
+      let a: Matrix<Size, 0, 1> = Matrix([[]]);
+      assert_eq!(a / 2, Matrix([[]]));
+
+      let a: Matrix<Size, 0, 0> = Matrix([]);
+      assert_eq!(a / 2, Matrix([]));
    }
 }
