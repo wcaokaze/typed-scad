@@ -1,6 +1,7 @@
+use crate::math::unit::Unit;
+use std::iter::Sum;
 use std::ops::{Add, Div, Mul, Sub};
 use std::mem::MaybeUninit;
-use crate::math::unit::Unit;
 
 #[derive(Debug)]
 pub struct Matrix<U: Unit, const M: usize, const N: usize>([[U; N]; M]);
@@ -122,10 +123,33 @@ impl<U: Unit, const M: usize, const N: usize, Rhs> Div<Rhs> for Matrix<U, M, N>
    }
 }
 
+impl<U: Unit, const L: usize, const M: usize, const N: usize>
+   Mul<Matrix<U, N, L>> for Matrix<U, L, M>
+   where U: Mul<U>,
+         U: Copy,
+         U::Output: Unit,
+         U::Output: Sum
+{
+   type Output = Matrix<U::Output, N, M>;
+   fn mul(self, rhs: Matrix<U, N, L>) -> Self::Output {
+      let a = self.transpose().0.map(|self_row|
+         rhs.0.map(|rhs_column|
+            self_row.iter()
+               .zip(rhs_column)
+               .map(|(&sm, rn)| sm * rn)
+               .sum()
+         )
+      );
+
+      Matrix(a).transpose()
+   }
+}
+
 #[cfg(test)]
 mod tests {
    use super::Matrix;
    use crate::geometry::{Size, SizeLiteral};
+   use crate::math::unit::Exp;
 
    #[test]
    fn default() {
@@ -277,5 +301,35 @@ mod tests {
       ]);
 
       assert_eq!(a.transpose(), expected);
+   }
+
+   #[test]
+   fn mul_matrix() {
+      // NOTE: It looks like being transposed in code.
+      // The type of the follow matrix is Matrix<Size, 2, 3>,
+      // not Matrix<Size, 3, 2>. `[1, 2, 3]` looks like a row, but actually it's
+      // a column. Since they are accessed with `matrix.0[x][y]`.
+      let a = Matrix([
+         [1.mm(), 2.mm(), 3.mm()],
+         [4.mm(), 5.mm(), 6.mm()]
+      ]);
+
+      let b = Matrix([
+         [1.mm(), 2.mm()],
+         [3.mm(), 4.mm()],
+         [5.mm(), 6.mm()],
+         [7.mm(), 8.mm()]
+      ]);
+
+      let expected = unsafe {
+         Matrix([
+            [Exp::<Size, 2>::new( 9.0), Exp::<Size, 2>::new(12.0), Exp::<Size, 2>::new(15.0)],
+            [Exp::<Size, 2>::new(19.0), Exp::<Size, 2>::new(26.0), Exp::<Size, 2>::new(33.0)],
+            [Exp::<Size, 2>::new(29.0), Exp::<Size, 2>::new(40.0), Exp::<Size, 2>::new(51.0)],
+            [Exp::<Size, 2>::new(39.0), Exp::<Size, 2>::new(54.0), Exp::<Size, 2>::new(69.0)]
+         ])
+      };
+
+      assert_eq!(a * b, expected);
    }
 }

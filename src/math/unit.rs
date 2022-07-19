@@ -1,3 +1,5 @@
+use crate::math::rough_fp::rough_partial_eq;
+use std::iter::Sum;
 use std::marker::PhantomData;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
@@ -156,6 +158,12 @@ impl<U: Unit, const N: i32> ExponentialUnit<U, N> {
 
 impl<U: Unit, const N: i32> Unit for Exp<U, N> {}
 
+impl<U: Unit, const N: i32> PartialEq for Exp<U, N> {
+   fn eq(&self, other: &Self) -> bool {
+      rough_partial_eq(self.0, other.0)
+   }
+}
+
 impl<U: Unit, const N: i32> Add for Exp<U, N> where U: Add {
    type Output = Exp<U, N>;
    fn add(self, rhs: Exp<U, N>) -> Exp<U, N> {
@@ -194,6 +202,15 @@ impl<U: Unit, const N: i32> Neg for Exp<U, N> {
    type Output = Exp<U, N>;
    fn neg(self) -> Exp<U, N> {
       unsafe { Exp::new(-self.0) }
+   }
+}
+
+impl<U: Unit, const N: i32> Sum for Exp<U, N>
+   where U: Sum
+{
+   fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+      let sum = iter.map(|e| e.0).sum();
+      unsafe { Exp::new(sum) }
    }
 }
 
