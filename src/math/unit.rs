@@ -1,3 +1,5 @@
+use crate::math::rough_fp::rough_partial_eq;
+use std::iter::Sum;
 use std::marker::PhantomData;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
@@ -14,7 +16,7 @@ impl Unit for ! {}
 /// # Examples
 /// ```
 /// # use typed_scad::geometry::{Angle, AngleLiteral, Size, SizeLiteral};
-/// # use typed_scad::geometry::unit::{DerivedUnit, Exp, Unit};
+/// # use typed_scad::math::unit::{DerivedUnit, Exp, Unit};
 /// let _: DerivedUnit<Size, Angle>; // mm⋅rad
 /// let _: Exp<Size, 2>; // mm²
 /// let _: DerivedUnit<Size, Exp<Angle, -1>>; // mm/rad
@@ -84,7 +86,7 @@ impl<
    /// Be careful about type arguments.
    /// ```
    /// # use typed_scad::geometry::{Angle, Size, SizeLiteral};
-   /// # use typed_scad::geometry::unit::DerivedUnit;
+   /// # use typed_scad::math::unit::DerivedUnit;
    /// let size = 42.mm();
    ///
    /// let _: DerivedUnit<Size, Angle> = unsafe {
@@ -133,7 +135,7 @@ impl<U: Unit, const N: i32> ExponentialUnit<U, N> {
    /// Be careful about type arguments.
    /// ```
    /// # use typed_scad::geometry::{Size, SizeLiteral};
-   /// # use typed_scad::geometry::unit::Exp;
+   /// # use typed_scad::math::unit::Exp;
    /// let size = 42.mm();
    ///
    /// let _: Exp<Size, 3> = unsafe {
@@ -155,6 +157,12 @@ impl<U: Unit, const N: i32> ExponentialUnit<U, N> {
 }
 
 impl<U: Unit, const N: i32> Unit for Exp<U, N> {}
+
+impl<U: Unit, const N: i32> PartialEq for Exp<U, N> {
+   fn eq(&self, other: &Self) -> bool {
+      rough_partial_eq(self.0, other.0)
+   }
+}
 
 impl<U: Unit, const N: i32> Add for Exp<U, N> where U: Add {
    type Output = Exp<U, N>;
@@ -194,6 +202,15 @@ impl<U: Unit, const N: i32> Neg for Exp<U, N> {
    type Output = Exp<U, N>;
    fn neg(self) -> Exp<U, N> {
       unsafe { Exp::new(-self.0) }
+   }
+}
+
+impl<U: Unit, const N: i32> Sum for Exp<U, N>
+   where U: Sum
+{
+   fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+      let sum = iter.map(|e| e.0).sum();
+      unsafe { Exp::new(sum) }
    }
 }
 
