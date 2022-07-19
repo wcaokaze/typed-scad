@@ -4,7 +4,7 @@ use std::ops::{Add, Div, Mul, Sub};
 use std::mem::MaybeUninit;
 
 #[derive(Debug)]
-pub struct Matrix<U: Unit, const M: usize, const N: usize>([[U; N]; M]);
+pub struct Matrix<U: Unit, const M: usize, const N: usize>(pub [[U; N]; M]);
 
 impl<U: Unit, const M: usize, const N: usize> Matrix<U, M, N> {
    pub fn transpose(self) -> Matrix<U, N, M> {
