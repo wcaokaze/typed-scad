@@ -3,7 +3,7 @@ use std::iter::Sum;
 use std::mem::{ManuallyDrop, MaybeUninit};
 use std::ops::{Add, Div, Mul, Sub};
 
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Matrix<U: Unit, const M: usize, const N: usize>(pub [[U; N]; M]);
 
 impl<U: Unit, const M: usize, const N: usize> Matrix<U, M, N> {
@@ -49,14 +49,6 @@ union Transmuter<T, const M: usize, const N: usize> {
    b: ManuallyDrop<[[T; M]; N]>
 }
 
-impl<U: Unit, const M: usize, const N: usize> Clone for Matrix<U, M, N>
-   where U: Clone
-{
-   fn clone(&self) -> Matrix<U, M, N> {
-      Matrix(self.0.clone())
-   }
-}
-
 impl<U: Unit, const M: usize, const N: usize> Default for Matrix<U, M, N>
    where U: Default
 {
@@ -67,19 +59,6 @@ impl<U: Unit, const M: usize, const N: usize> Default for Matrix<U, M, N>
          )
       )
    }
-}
-
-impl<U: Unit, const M: usize, const N: usize> PartialEq for Matrix<U, M, N>
-   where U: PartialEq
-{
-   fn eq(&self, other: &Self) -> bool {
-      self.0 == other.0
-   }
-}
-
-impl<U: Unit, const M: usize, const N: usize> Eq for Matrix<U, M, N>
-   where U: Eq
-{
 }
 
 impl<U: Unit, const M: usize, const N: usize> Add for Matrix<U, M, N>
@@ -114,7 +93,8 @@ impl<U: Unit, const M: usize, const N: usize> Sub for Matrix<U, M, N>
    }
 }
 
-impl<U: Unit, const M: usize, const N: usize, Rhs> Mul<Rhs> for Matrix<U, M, N>
+impl<U: Unit, Rhs: Unit, const M: usize, const N: usize>
+   Mul<Rhs> for Matrix<U, M, N>
    where U: Mul<Rhs>,
          U::Output: Unit,
          Rhs: Copy
@@ -129,6 +109,27 @@ impl<U: Unit, const M: usize, const N: usize, Rhs> Mul<Rhs> for Matrix<U, M, N>
       Matrix(a)
    }
 }
+
+macro_rules! mul_num {
+   ($($t:ty),+) => ($(
+      impl<U: Unit, const M: usize, const N: usize> Mul<$t> for Matrix<U, M, N>
+         where U: Mul<$t>,
+               U::Output: Unit
+      {
+         type Output = Matrix<U::Output, M, N>;
+         fn mul(self, rhs: $t) -> Self::Output {
+            let a = self.0
+               .map(|m|
+                  m.map(|n| n * rhs)
+               );
+
+            Matrix(a)
+         }
+      }
+   )+)
+}
+
+mul_num!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64);
 
 impl<U: Unit, const M: usize, const N: usize, Rhs> Div<Rhs> for Matrix<U, M, N>
    where U: Div<Rhs>,
