@@ -1,13 +1,31 @@
 use crate::math::unit::Unit;
 use std::iter::Sum;
+use std::mem::{ManuallyDrop, MaybeUninit};
 use std::ops::{Add, Div, Mul, Sub};
-use std::mem::MaybeUninit;
 
 #[derive(Debug)]
 pub struct Matrix<U: Unit, const M: usize, const N: usize>(pub [[U; N]; M]);
 
 impl<U: Unit, const M: usize, const N: usize> Matrix<U, M, N> {
    pub fn transpose(self) -> Matrix<U, N, M> {
+      if M == 1 {
+         let transmuter = Transmuter {
+            a: ManuallyDrop::new(self.0)
+         };
+         return Matrix(
+            unsafe { ManuallyDrop::into_inner(transmuter.b) }
+         );
+      }
+
+      if N == 1 {
+         let transmuter = Transmuter {
+            b: ManuallyDrop::new(self.0)
+         };
+         return Matrix(
+            unsafe { ManuallyDrop::into_inner(transmuter.a) }
+         );
+      }
+
       let mut transposed: [[MaybeUninit<U>; M]; N] = unsafe {
          MaybeUninit::uninit().assume_init()
       };
@@ -24,6 +42,11 @@ impl<U: Unit, const M: usize, const N: usize> Matrix<U, M, N> {
          )
       )
    }
+}
+
+union Transmuter<T, const M: usize, const N: usize> {
+   a: ManuallyDrop<[[T; N]; M]>,
+   b: ManuallyDrop<[[T; M]; N]>
 }
 
 impl<U: Unit, const M: usize, const N: usize> Clone for Matrix<U, M, N>
@@ -275,6 +298,14 @@ mod tests {
 
    #[test]
    fn transpose() {
+      let a = Matrix([[1.mm(), 2.mm(), 3.mm()]]);
+      let b = Matrix([[1.mm()], [2.mm()], [3.mm()]]);
+      assert_eq!(a.transpose(), b);
+
+      let a = Matrix([[1.mm()], [2.mm()], [3.mm()]]);
+      let b = Matrix([[1.mm(), 2.mm(), 3.mm()]]);
+      assert_eq!(a.transpose(), b);
+
       let a = Matrix([
          [1.mm(), 2.mm(), 3.mm()],
          [4.mm(), 5.mm(), 6.mm()]
