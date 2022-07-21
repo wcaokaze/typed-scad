@@ -94,24 +94,24 @@ impl Intersection<Plane> for Plane {
 
       let vector = self.normal_vector.vector_product(&rhs.normal_vector);
 
-      let point = if vector.x != Size::ZERO {
+      let point = if vector.x() != Size::ZERO {
          // When vector.x != 0, the line must pass X=0. So a point on the line
          // can solved from `self`, `rhs`, and X=0 as simultaneous equations.
          Point::new(
             Size::ZERO,
-            (((sv.x * rv.z * sp.x()) - (sv.z * rv.x * rp.x()) + (sv.y * rv.z * sp.y()) - (sv.z * rv.y * rp.y()) + (sv.z * rv.z * sp.z()) - (sv.z * rv.z * rp.z())) /  (sv.y * rv.z - sv.z * rv.y)).into(),
-            (((sv.z * rv.y * sp.z()) - (sv.y * rv.z * rp.z()) + (sv.x * rv.y * sp.x()) - (sv.y * rv.x * rp.x()) + (sv.y * rv.y * sp.y()) - (sv.y * rv.y * rp.y())) / -(sv.y * rv.z - sv.z * rv.y)).into()
+            (((sv.x() * rv.z() * sp.x()) - (sv.z() * rv.x() * rp.x()) + (sv.y() * rv.z() * sp.y()) - (sv.z() * rv.y() * rp.y()) + (sv.z() * rv.z() * sp.z()) - (sv.z() * rv.z() * rp.z())) /  (sv.y() * rv.z() - sv.z() * rv.y())).into(),
+            (((sv.z() * rv.y() * sp.z()) - (sv.y() * rv.z() * rp.z()) + (sv.x() * rv.y() * sp.x()) - (sv.y() * rv.x() * rp.x()) + (sv.y() * rv.y() * sp.y()) - (sv.y() * rv.y() * rp.y())) / -(sv.y() * rv.z() - sv.z() * rv.y())).into()
          )
-      } else if vector.y != Size::ZERO {
+      } else if vector.y() != Size::ZERO {
          Point::new(
-            (((sv.x * rv.z * sp.x()) - (sv.z * rv.x * rp.x()) + (sv.y * rv.z * sp.y()) - (sv.z * rv.y * rp.y()) + (sv.z * rv.z * sp.z()) - (sv.z * rv.z * rp.z())) / -(sv.z * rv.x - sv.x * rv.z)).into(),
+            (((sv.x() * rv.z() * sp.x()) - (sv.z() * rv.x() * rp.x()) + (sv.y() * rv.z() * sp.y()) - (sv.z() * rv.y() * rp.y()) + (sv.z() * rv.z() * sp.z()) - (sv.z() * rv.z() * rp.z())) / -(sv.z() * rv.x() - sv.x() * rv.z())).into(),
             Size::ZERO,
-            (((sv.y * rv.x * sp.y()) - (sv.x * rv.y * rp.y()) + (sv.z * rv.x * sp.z()) - (sv.x * rv.z * rp.z()) + (sv.x * rv.x * sp.x()) - (sv.x * rv.x * rp.x())) /  (sv.z * rv.x - sv.x * rv.z)).into()
+            (((sv.y() * rv.x() * sp.y()) - (sv.x() * rv.y() * rp.y()) + (sv.z() * rv.x() * sp.z()) - (sv.x() * rv.z() * rp.z()) + (sv.x() * rv.x() * sp.x()) - (sv.x() * rv.x() * rp.x())) /  (sv.z() * rv.x() - sv.x() * rv.z())).into()
          )
-      } else if vector.z != Size::ZERO {
+      } else if vector.z() != Size::ZERO {
          Point::new(
-            (((sv.z * rv.y * sp.z()) - (sv.y * rv.z * rp.z()) + (sv.x * rv.y * sp.x()) - (sv.y * rv.x * rp.x()) + (sv.y * rv.y * sp.y()) - (sv.y * rv.y * rp.y())) /  (sv.x * rv.y - sv.y * rv.x)).into(),
-            (((sv.y * rv.x * sp.y()) - (sv.x * rv.y * rp.y()) + (sv.z * rv.x * sp.z()) - (rv.z * sv.x * rp.z()) + (sv.x * rv.x * sp.x()) - (sv.x * rv.x * rp.x())) / -(sv.x * rv.y - sv.y * rv.x)).into(),
+            (((sv.z() * rv.y() * sp.z()) - (sv.y() * rv.z() * rp.z()) + (sv.x() * rv.y() * sp.x()) - (sv.y() * rv.x() * rp.x()) + (sv.y() * rv.y() * sp.y()) - (sv.y() * rv.y() * rp.y())) /  (sv.x() * rv.y() - sv.y() * rv.x())).into(),
+            (((sv.y() * rv.x() * sp.y()) - (sv.x() * rv.y() * rp.y()) + (sv.z() * rv.x() * sp.z()) - (rv.z() * sv.x() * rp.z()) + (sv.x() * rv.x() * sp.x()) - (sv.x() * rv.x() * rp.x())) / -(sv.x() * rv.y() - sv.y() * rv.x())).into(),
             Size::ZERO
          )
       } else {
@@ -155,18 +155,13 @@ impl Intersection<Line> for Plane {
       }
 
       let t: f64 = Into::into(
-         (
-            (self.point.x() - rhs.point.x()) * self.normal_vector.x +
-            (self.point.y() - rhs.point.y()) * self.normal_vector.y +
-            (self.point.z() - rhs.point.z()) * self.normal_vector.z
-         ) / inner_product
+         Vector::between(&rhs.point, &self.point)
+            .inner_product(&self.normal_vector) / inner_product
       );
 
-      Point::new(
-         rhs.point.x() + t * rhs.vector.x,
-         rhs.point.y() + t * rhs.vector.y,
-         rhs.point.z() + t * rhs.vector.z
-      )
+      Point {
+         matrix: rhs.point.matrix + rhs.vector.matrix * t
+      }
    }
 }
 

@@ -1,4 +1,5 @@
 use crate::geometry::{Angle, Size, SizeLiteral, Point};
+use crate::math::Matrix;
 use crate::math::unit::Exp;
 use std::iter::Sum;
 use std::ops::{
@@ -8,9 +9,7 @@ use std::ops::{
 /// 3D Vector.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Vector {
-   pub x: Size,
-   pub y: Size,
-   pub z: Size
+   pub matrix: Matrix<Size, 3, 1>
 }
 
 impl Vector {
@@ -23,19 +22,34 @@ impl Vector {
       Size::millimeter(0.0), Size::millimeter(0.0), Size::millimeter(1.0));
 
    pub const fn new(x: Size, y: Size, z: Size) -> Vector {
-      Vector { x, y, z }
+      Vector {
+         matrix: Matrix([[x], [y], [z]])
+      }
    }
 
    pub fn between(point_a: &Point, point_b: &Point) -> Vector {
       Vector {
-         x: point_b.x() - point_a.x(),
-         y: point_b.y() - point_a.y(),
-         z: point_b.z() - point_a.z()
+         matrix: point_b.matrix - point_a.matrix
       }
    }
 
+   #[inline]
+   pub const fn x(&self) -> Size {
+      self.matrix.0[0][0]
+   }
+
+   #[inline]
+   pub const fn y(&self) -> Size {
+      self.matrix.0[1][0]
+   }
+
+   #[inline]
+   pub const fn z(&self) -> Size {
+      self.matrix.0[2][0]
+   }
+
    pub fn norm(&self) -> Size {
-      (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
+      (self.x() * self.x() + self.y() * self.y() + self.z() * self.z()).sqrt()
    }
 
    pub fn to_unit_vector(&self) -> Vector {
@@ -45,27 +59,23 @@ impl Vector {
                  since this vector does not point any direction.");
       }
 
-      Vector::new(
-         Size(self.x.0 / norm.0),
-         Size(self.y.0 / norm.0),
-         Size(self.z.0 / norm.0)
-      )
+      Vector {
+         matrix: self.matrix / norm.0
+      }
    }
 
    pub fn vector_product(&self, other: &Vector) -> Vector {
       unsafe {
          Vector::new(
-            (self.y * other.z - self.z * other.y).operate_as::<Size, 1>().into(),
-            (self.z * other.x - self.x * other.z).operate_as::<Size, 1>().into(),
-            (self.x * other.y - self.y * other.x).operate_as::<Size, 1>().into()
+            (self.y() * other.z() - self.z() * other.y()).operate_as::<Size, 1>().into(),
+            (self.z() * other.x() - self.x() * other.z()).operate_as::<Size, 1>().into(),
+            (self.x() * other.y() - self.y() * other.x()).operate_as::<Size, 1>().into()
          )
       }
    }
 
    pub fn inner_product(&self, other: &Vector) -> Exp<Size, 2> {
-      self.x * other.x +
-      self.y * other.y +
-      self.z * other.z
+      (self.matrix * other.matrix.transpose()).0[0][0]
    }
 
    pub fn angle_with(&self, other: &Vector) -> Angle {
@@ -78,7 +88,9 @@ impl Vector {
 impl Add for Vector {
    type Output = Vector;
    fn add(self, rhs: Vector) -> Vector {
-      Vector::new(self.x + rhs.x, self.y + rhs.y, self.z + rhs.z)
+      Vector {
+         matrix: self.matrix + rhs.matrix
+      }
    }
 }
 
@@ -91,7 +103,9 @@ impl AddAssign for Vector {
 impl Sub for Vector {
    type Output = Vector;
    fn sub(self, rhs: Vector) -> Vector {
-      Vector::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z)
+      Vector {
+         matrix: self.matrix - rhs.matrix
+      }
    }
 }
 
@@ -106,11 +120,9 @@ macro_rules! mul {
       impl Mul<$t> for Vector {
          type Output = Vector;
          fn mul(self, rhs: $t) -> Vector {
-            Vector::new(
-               self.x * rhs as f64,
-               self.y * rhs as f64,
-               self.z * rhs as f64
-            )
+            Vector {
+               matrix: self.matrix * rhs as f64
+            }
          }
       }
 
@@ -136,11 +148,9 @@ macro_rules! div {
       impl Div<$t> for Vector {
          type Output = Vector;
          fn div(self, rhs: $t) -> Vector {
-            Vector::new(
-               self.x / rhs as f64,
-               self.y / rhs as f64,
-               self.z / rhs as f64
-            )
+            Vector {
+               matrix: self.matrix / rhs as f64
+            }
          }
       }
 
@@ -157,7 +167,9 @@ div!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64);
 impl Neg for Vector {
    type Output = Vector;
    fn neg(self) -> Self::Output {
-      Vector::new(-self.x, -self.y, -self.z)
+      Vector {
+         matrix: self.matrix * -1
+      }
    }
 }
 

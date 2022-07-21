@@ -1,30 +1,34 @@
 use crate::geometry::{Size, Vector};
+use crate::math::Matrix;
 
 /// 3D Point.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Point {
-   pub offset_from_origin: Vector
+   pub matrix: Matrix<Size, 3, 1>
 }
 
 impl Point {
-   pub const ORIGIN: Point = Point { offset_from_origin: Vector::ZERO };
+   pub const ORIGIN: Point = Point::new(Size::ZERO, Size::ZERO, Size::ZERO);
 
    pub const fn new(x: Size, y: Size, z: Size) -> Point {
       Point {
-         offset_from_origin: Vector::new(x, y, z)
+         matrix: Matrix([[x], [y], [z]])
       }
    }
 
+   #[inline]
    pub const fn x(&self) -> Size {
-      self.offset_from_origin.x
+      self.matrix.0[0][0]
    }
 
+   #[inline]
    pub const fn y(&self) -> Size {
-      self.offset_from_origin.y
+      self.matrix.0[1][0]
    }
 
+   #[inline]
    pub const fn z(&self) -> Size {
-      self.offset_from_origin.z
+      self.matrix.0[2][0]
    }
 
    pub fn distance(&self, another: &Point) -> Size {
