@@ -234,15 +234,15 @@ impl Neg for Angle {
 
 impl Unit for Angle {}
 
-impl Into<f64> for Exp<Angle, 0> {
-   fn into(self) -> f64 {
-      self.0
+impl From<Exp<Angle, 0>> for f64 {
+   fn from(exp: Exp<Angle, 0>) -> f64 {
+      exp.0
    }
 }
 
-impl Into<Angle> for Exp<Angle, 1> {
-   fn into(self) -> Angle {
-      Angle(self.0)
+impl From<Exp<Angle, 1>> for Angle {
+   fn from(exp: Exp<Angle, 1>) -> Angle {
+      Angle(exp.0)
    }
 }
 

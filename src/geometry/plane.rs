@@ -99,19 +99,19 @@ impl Intersection<Plane> for Plane {
          // can solved from `self`, `rhs`, and X=0 as simultaneous equations.
          Point::new(
             Size::ZERO,
-            (((sv.x() * rv.z() * sp.x()) - (sv.z() * rv.x() * rp.x()) + (sv.y() * rv.z() * sp.y()) - (sv.z() * rv.y() * rp.y()) + (sv.z() * rv.z() * sp.z()) - (sv.z() * rv.z() * rp.z())) /  (sv.y() * rv.z() - sv.z() * rv.y())).into(),
-            (((sv.z() * rv.y() * sp.z()) - (sv.y() * rv.z() * rp.z()) + (sv.x() * rv.y() * sp.x()) - (sv.y() * rv.x() * rp.x()) + (sv.y() * rv.y() * sp.y()) - (sv.y() * rv.y() * rp.y())) / -(sv.y() * rv.z() - sv.z() * rv.y())).into()
+            Size::from(((sv.x() * rv.z() * sp.x()) - (sv.z() * rv.x() * rp.x()) + (sv.y() * rv.z() * sp.y()) - (sv.z() * rv.y() * rp.y()) + (sv.z() * rv.z() * sp.z()) - (sv.z() * rv.z() * rp.z())) /  (sv.y() * rv.z() - sv.z() * rv.y())),
+            Size::from(((sv.z() * rv.y() * sp.z()) - (sv.y() * rv.z() * rp.z()) + (sv.x() * rv.y() * sp.x()) - (sv.y() * rv.x() * rp.x()) + (sv.y() * rv.y() * sp.y()) - (sv.y() * rv.y() * rp.y())) / -(sv.y() * rv.z() - sv.z() * rv.y()))
          )
       } else if vector.y() != Size::ZERO {
          Point::new(
-            (((sv.x() * rv.z() * sp.x()) - (sv.z() * rv.x() * rp.x()) + (sv.y() * rv.z() * sp.y()) - (sv.z() * rv.y() * rp.y()) + (sv.z() * rv.z() * sp.z()) - (sv.z() * rv.z() * rp.z())) / -(sv.z() * rv.x() - sv.x() * rv.z())).into(),
+            Size::from(((sv.x() * rv.z() * sp.x()) - (sv.z() * rv.x() * rp.x()) + (sv.y() * rv.z() * sp.y()) - (sv.z() * rv.y() * rp.y()) + (sv.z() * rv.z() * sp.z()) - (sv.z() * rv.z() * rp.z())) / -(sv.z() * rv.x() - sv.x() * rv.z())),
             Size::ZERO,
-            (((sv.y() * rv.x() * sp.y()) - (sv.x() * rv.y() * rp.y()) + (sv.z() * rv.x() * sp.z()) - (sv.x() * rv.z() * rp.z()) + (sv.x() * rv.x() * sp.x()) - (sv.x() * rv.x() * rp.x())) /  (sv.z() * rv.x() - sv.x() * rv.z())).into()
+            Size::from(((sv.y() * rv.x() * sp.y()) - (sv.x() * rv.y() * rp.y()) + (sv.z() * rv.x() * sp.z()) - (sv.x() * rv.z() * rp.z()) + (sv.x() * rv.x() * sp.x()) - (sv.x() * rv.x() * rp.x())) /  (sv.z() * rv.x() - sv.x() * rv.z()))
          )
       } else if vector.z() != Size::ZERO {
          Point::new(
-            (((sv.z() * rv.y() * sp.z()) - (sv.y() * rv.z() * rp.z()) + (sv.x() * rv.y() * sp.x()) - (sv.y() * rv.x() * rp.x()) + (sv.y() * rv.y() * sp.y()) - (sv.y() * rv.y() * rp.y())) /  (sv.x() * rv.y() - sv.y() * rv.x())).into(),
-            (((sv.y() * rv.x() * sp.y()) - (sv.x() * rv.y() * rp.y()) + (sv.z() * rv.x() * sp.z()) - (rv.z() * sv.x() * rp.z()) + (sv.x() * rv.x() * sp.x()) - (sv.x() * rv.x() * rp.x())) / -(sv.x() * rv.y() - sv.y() * rv.x())).into(),
+            Size::from(((sv.z() * rv.y() * sp.z()) - (sv.y() * rv.z() * rp.z()) + (sv.x() * rv.y() * sp.x()) - (sv.y() * rv.x() * rp.x()) + (sv.y() * rv.y() * sp.y()) - (sv.y() * rv.y() * rp.y())) /  (sv.x() * rv.y() - sv.y() * rv.x())),
+            Size::from(((sv.y() * rv.x() * sp.y()) - (sv.x() * rv.y() * rp.y()) + (sv.z() * rv.x() * sp.z()) - (rv.z() * sv.x() * rp.z()) + (sv.x() * rv.x() * sp.x()) - (sv.x() * rv.x() * rp.x())) / -(sv.x() * rv.y() - sv.y() * rv.x())),
             Size::ZERO
          )
       } else {
@@ -154,7 +154,7 @@ impl Intersection<Line> for Plane {
          panic!("The specified plane and line don't have an intersection.");
       }
 
-      let t: f64 = Into::into(
+      let t = f64::from(
          Vector::between(&rhs.point, &self.point)
             .inner_product(&self.normal_vector) / inner_product
       );

@@ -221,15 +221,15 @@ impl<const N: i32> Div<Size> for Exp<Size, N>
    }
 }
 
-impl Into<f64> for Exp<Size, 0> {
-   fn into(self) -> f64 {
-      self.0
+impl From<Exp<Size, 0>> for f64 {
+   fn from(exp: Exp<Size, 0>) -> f64 {
+      exp.0
    }
 }
 
-impl Into<Size> for Exp<Size, 1> {
-   fn into(self) -> Size {
-      Size(self.0)
+impl From<Exp<Size, 1>> for Size {
+   fn from(exp: Exp<Size, 1>) -> Size {
+      Size(exp.0)
    }
 }
 
