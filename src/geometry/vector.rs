@@ -1,5 +1,6 @@
-use crate::geometry::{Angle, Size, SizeLiteral, Point};
-use crate::geometry::unit::Exp;
+use crate::geometry::{Angle, Size, SizeLiteral, Point, sin, acos, cos};
+use crate::math::Matrix;
+use crate::math::unit::Exp;
 use std::iter::Sum;
 use std::ops::{
    Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign
@@ -8,9 +9,7 @@ use std::ops::{
 /// 3D Vector.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Vector {
-   pub x: Size,
-   pub y: Size,
-   pub z: Size
+   pub matrix: Matrix<Size, 3, 1>
 }
 
 impl Vector {
@@ -23,24 +22,34 @@ impl Vector {
       Size::millimeter(0.0), Size::millimeter(0.0), Size::millimeter(1.0));
 
    pub const fn new(x: Size, y: Size, z: Size) -> Vector {
-      Vector { x, y, z }
+      Vector {
+         matrix: Matrix([[x], [y], [z]])
+      }
    }
 
    pub fn between(point_a: &Point, point_b: &Point) -> Vector {
       Vector {
-         x: point_b.x() - point_a.x(),
-         y: point_b.y() - point_a.y(),
-         z: point_b.z() - point_a.z()
+         matrix: point_b.matrix - point_a.matrix
       }
    }
 
-   pub fn norm(&self) -> Size {
-      let x = self.x.to_millimeter();
-      let y = self.y.to_millimeter();
-      let z = self.z.to_millimeter();
+   #[inline]
+   pub const fn x(&self) -> Size {
+      self.matrix.0[0][0]
+   }
 
-      let norm = f64::sqrt(x * x + y * y + z * z);
-      Size::millimeter(norm)
+   #[inline]
+   pub const fn y(&self) -> Size {
+      self.matrix.0[1][0]
+   }
+
+   #[inline]
+   pub const fn z(&self) -> Size {
+      self.matrix.0[2][0]
+   }
+
+   pub fn norm(&self) -> Size {
+      (self.x() * self.x() + self.y() * self.y() + self.z() * self.z()).sqrt()
    }
 
    pub fn to_unit_vector(&self) -> Vector {
@@ -50,46 +59,60 @@ impl Vector {
                  since this vector does not point any direction.");
       }
 
-      Vector::new(
-         Size::millimeter(self.x.to_millimeter() / norm.to_millimeter()),
-         Size::millimeter(self.y.to_millimeter() / norm.to_millimeter()),
-         Size::millimeter(self.z.to_millimeter() / norm.to_millimeter())
-      )
+      Vector {
+         matrix: self.matrix / norm.0
+      }
    }
 
    pub fn vector_product(&self, other: &Vector) -> Vector {
-      let ax = self.x.to_millimeter();
-      let ay = self.y.to_millimeter();
-      let az = self.z.to_millimeter();
-      let bx = other.x.to_millimeter();
-      let by = other.y.to_millimeter();
-      let bz = other.z.to_millimeter();
-
-      Vector::new(
-         Size::millimeter(ay * bz - az * by),
-         Size::millimeter(az * bx - ax * bz),
-         Size::millimeter(ax * by - ay * bx)
-      )
+      unsafe {
+         Vector::new(
+            (self.y() * other.z() - self.z() * other.y()).operate_as::<Size, 1>().into(),
+            (self.z() * other.x() - self.x() * other.z()).operate_as::<Size, 1>().into(),
+            (self.x() * other.y() - self.y() * other.x()).operate_as::<Size, 1>().into()
+         )
+      }
    }
 
    pub fn inner_product(&self, other: &Vector) -> Exp<Size, 2> {
-      self.x * other.x +
-      self.y * other.y +
-      self.z * other.z
+      (self.matrix * other.matrix.transpose()).0[0][0]
    }
 
    pub fn angle_with(&self, other: &Vector) -> Angle {
-      Angle::acos(
-         self.inner_product(other).0
-            / (self.norm().to_millimeter() * other.norm().to_millimeter())
+      acos(
+         (self.inner_product(other) / (self.norm() * other.norm())).into()
       )
+   }
+
+   pub fn rotate(&mut self, axis: &Vector, angle: Angle) {
+      *self = self.rotated(axis, angle);
+   }
+
+   pub fn rotated(&self, axis: &Vector, angle: Angle) -> Vector {
+      let axis_unit_vector = axis.to_unit_vector();
+
+      let axis_vector = {
+         let inner_product: Size = unsafe {
+            self.inner_product(&axis_unit_vector)
+               .operate_as::<Size, 1>().into()
+         };
+         axis.matrix * (inner_product / axis.norm())
+      };
+
+      Vector {
+         matrix: self.matrix * cos(angle)
+            + (1.0 - cos(angle)) * axis_vector
+            + axis_unit_vector.vector_product(&self).matrix * sin(angle)
+      }
    }
 }
 
 impl Add for Vector {
    type Output = Vector;
    fn add(self, rhs: Vector) -> Vector {
-      Vector::new(self.x + rhs.x, self.y + rhs.y, self.z + rhs.z)
+      Vector {
+         matrix: self.matrix + rhs.matrix
+      }
    }
 }
 
@@ -102,7 +125,9 @@ impl AddAssign for Vector {
 impl Sub for Vector {
    type Output = Vector;
    fn sub(self, rhs: Vector) -> Vector {
-      Vector::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z)
+      Vector {
+         matrix: self.matrix - rhs.matrix
+      }
    }
 }
 
@@ -117,11 +142,9 @@ macro_rules! mul {
       impl Mul<$t> for Vector {
          type Output = Vector;
          fn mul(self, rhs: $t) -> Vector {
-            Vector::new(
-               self.x * rhs as f64,
-               self.y * rhs as f64,
-               self.z * rhs as f64
-            )
+            Vector {
+               matrix: self.matrix * rhs as f64
+            }
          }
       }
 
@@ -147,11 +170,9 @@ macro_rules! div {
       impl Div<$t> for Vector {
          type Output = Vector;
          fn div(self, rhs: $t) -> Vector {
-            Vector::new(
-               self.x / rhs as f64,
-               self.y / rhs as f64,
-               self.z / rhs as f64
-            )
+            Vector {
+               matrix: self.matrix / rhs as f64
+            }
          }
       }
 
@@ -168,7 +189,9 @@ div!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64);
 impl Neg for Vector {
    type Output = Vector;
    fn neg(self) -> Self::Output {
-      Vector::new(-self.x, -self.y, -self.z)
+      Vector {
+         matrix: self.matrix * -1
+      }
    }
 }
 
@@ -322,5 +345,34 @@ mod tests {
          .sum();
 
       assert_eq!(sum, Vector::new(55.mm(), 55.mm(), 55.mm()));
+   }
+
+   #[test]
+   fn rotate() {
+      assert_eq!(
+         Vector::X_UNIT_VECTOR.rotated(&Vector::Y_UNIT_VECTOR, 90.deg()),
+         -Vector::Z_UNIT_VECTOR
+      );
+
+      assert_eq!(
+         Vector::Y_UNIT_VECTOR.rotated(&Vector::Z_UNIT_VECTOR, 90.deg()),
+         -Vector::X_UNIT_VECTOR
+      );
+
+      assert_eq!(
+         Vector::Z_UNIT_VECTOR.rotated(&Vector::X_UNIT_VECTOR, 90.deg()),
+         -Vector::Y_UNIT_VECTOR
+      );
+
+      let actual = Vector::X_UNIT_VECTOR
+         .rotated(&Vector::Z_UNIT_VECTOR, 45.deg());
+
+      let expected = Vector::new(
+         (1.0 / f64::sqrt(2.0)).mm(),
+         (1.0 / f64::sqrt(2.0)).mm(),
+         0.mm()
+      );
+
+      assert_eq!(actual, expected);
    }
 }

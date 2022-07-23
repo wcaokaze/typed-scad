@@ -1,6 +1,6 @@
-use crate::foundation::rough_fp::{rough_partial_cmp, rough_partial_eq};
 use crate::geometry::{IterableAngleRange, Size};
-use crate::geometry::unit::{Exp, Unit};
+use crate::math::rough_fp::{rough_partial_cmp, rough_partial_eq};
+use crate::math::unit::{Exp, Unit};
 use std::cmp::Ordering;
 use std::fmt::{self, Display, Formatter};
 use std::ops::{
@@ -50,6 +50,34 @@ use std::ops::{
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Angle(f64);
 
+pub fn sin(angle: Angle) -> f64 {
+   angle.sin()
+}
+
+pub fn cos(angle: Angle) -> f64 {
+   angle.cos()
+}
+
+pub fn tan(angle: Angle) -> f64 {
+   angle.tan()
+}
+
+pub fn asin(a: f64) -> Angle {
+   Angle::asin(a)
+}
+
+pub fn acos(a: f64) -> Angle {
+   Angle::acos(a)
+}
+
+pub fn atan(a: f64) -> Angle {
+   Angle::atan(a)
+}
+
+pub fn atan2(y: Size, x: Size) -> Angle {
+   Angle::atan2(y, x)
+}
+
 impl Angle {
    /// PI radian. But `Angle::PI` is not enough readable.
    /// Also consider using `180.deg()`
@@ -98,7 +126,7 @@ impl Angle {
    }
 
    pub fn atan2(y: Size, x: Size) -> Angle {
-      Angle(f64::atan2(y.to_millimeter(), x.to_millimeter()))
+      Angle(f64::atan2(y.0, x.0))
    }
 
    pub fn abs(self) -> Angle {
@@ -234,15 +262,15 @@ impl Neg for Angle {
 
 impl Unit for Angle {}
 
-impl Into<f64> for Exp<Angle, 0> {
-   fn into(self) -> f64 {
-      self.0
+impl From<Exp<Angle, 0>> for f64 {
+   fn from(exp: Exp<Angle, 0>) -> f64 {
+      exp.0
    }
 }
 
-impl Into<Angle> for Exp<Angle, 1> {
-   fn into(self) -> Angle {
-      Angle(self.0)
+impl From<Exp<Angle, 1>> for Angle {
+   fn from(exp: Exp<Angle, 1>) -> Angle {
+      Angle(exp.0)
    }
 }
 

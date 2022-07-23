@@ -1,5 +1,8 @@
+use crate::math::Matrix;
+use crate::math::rough_fp::rough_partial_eq;
+use std::iter::Sum;
 use std::marker::PhantomData;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::{Add, Div, Mul, MulAssign, Neg, Sub};
 
 /// Type which has a value as some unit.
 ///
@@ -14,7 +17,7 @@ impl Unit for ! {}
 /// # Examples
 /// ```
 /// # use typed_scad::geometry::{Angle, AngleLiteral, Size, SizeLiteral};
-/// # use typed_scad::geometry::unit::{DerivedUnit, Exp, Unit};
+/// # use typed_scad::math::unit::{DerivedUnit, Exp, Unit};
 /// let _: DerivedUnit<Size, Angle>; // mm⋅rad
 /// let _: Exp<Size, 2>; // mm²
 /// let _: DerivedUnit<Size, Exp<Angle, -1>>; // mm/rad
@@ -84,7 +87,7 @@ impl<
    /// Be careful about type arguments.
    /// ```
    /// # use typed_scad::geometry::{Angle, Size, SizeLiteral};
-   /// # use typed_scad::geometry::unit::DerivedUnit;
+   /// # use typed_scad::math::unit::DerivedUnit;
    /// let size = 42.mm();
    ///
    /// let _: DerivedUnit<Size, Angle> = unsafe {
@@ -133,7 +136,7 @@ impl<U: Unit, const N: i32> ExponentialUnit<U, N> {
    /// Be careful about type arguments.
    /// ```
    /// # use typed_scad::geometry::{Size, SizeLiteral};
-   /// # use typed_scad::geometry::unit::Exp;
+   /// # use typed_scad::math::unit::Exp;
    /// let size = 42.mm();
    ///
    /// let _: Exp<Size, 3> = unsafe {
@@ -146,9 +149,21 @@ impl<U: Unit, const N: i32> ExponentialUnit<U, N> {
    pub unsafe fn new(value: f64) -> ExponentialUnit<U, N> {
       ExponentialUnit(value, PhantomData)
    }
+
+   pub unsafe fn operate_as<RU: Unit, const RN: i32>(self)
+      -> ExponentialUnit<RU, RN>
+   {
+      ExponentialUnit(self.0, PhantomData)
+   }
 }
 
 impl<U: Unit, const N: i32> Unit for Exp<U, N> {}
+
+impl<U: Unit, const N: i32> PartialEq for Exp<U, N> {
+   fn eq(&self, other: &Self) -> bool {
+      rough_partial_eq(self.0, other.0)
+   }
+}
 
 impl<U: Unit, const N: i32> Add for Exp<U, N> where U: Add {
    type Output = Exp<U, N>;
@@ -163,6 +178,35 @@ impl<U: Unit, const N: i32> Sub for Exp<U, N> where U: Sub {
       unsafe { Exp::new(self.0 - rhs.0) }
    }
 }
+
+macro_rules! mul {
+   ($($t:ty),+) => ($(
+      impl<U: Unit, const N: i32> Mul<$t> for Exp<U, N> where U: Mul<$t> {
+         type Output = Exp<U, N>;
+         fn mul(self, rhs: $t) -> Exp<U, N> {
+            unsafe { Exp::new(self.0 * rhs as f64) }
+         }
+      }
+
+      impl<U: Unit, const N: i32> Mul<Exp<U, N>> for $t where U: Mul<$t> {
+         type Output = Exp<U, N>;
+         fn mul(self, rhs: Exp<U, N>) -> Exp<U, N> {
+            rhs * self
+         }
+      }
+
+      impl<U: Unit, const N: i32> MulAssign<$t> for Exp<U, N>
+         where U: Mul<$t>,
+               Self: Copy
+      {
+         fn mul_assign(&mut self, rhs: $t) {
+            *self = *self * rhs;
+         }
+      }
+   )+)
+}
+
+mul!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64);
 
 impl<U: Unit, const NA: i32, const NB: i32>
    Mul<Exp<U, NB>> for Exp<U, NA>
@@ -188,6 +232,27 @@ impl<U: Unit, const N: i32> Neg for Exp<U, N> {
    type Output = Exp<U, N>;
    fn neg(self) -> Exp<U, N> {
       unsafe { Exp::new(-self.0) }
+   }
+}
+
+impl<U: Unit, const N: i32> Sum for Exp<U, N>
+   where U: Sum
+{
+   fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+      let sum = iter.map(|e| e.0).sum();
+      unsafe { Exp::new(sum) }
+   }
+}
+
+impl<U: Unit, Rhs: Unit, const L: i32, const M: usize, const N: usize>
+   Mul<Matrix<Rhs, M, N>> for Exp<U, L>
+   where Rhs: Mul<Exp<U, L>>,
+         Rhs::Output: Unit,
+         U: Copy
+{
+   type Output = Matrix<Rhs::Output, M, N>;
+   fn mul(self, rhs: Matrix<Rhs, M, N>) -> Self::Output {
+      rhs * self
    }
 }
 

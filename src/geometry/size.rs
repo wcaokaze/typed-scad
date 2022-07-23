@@ -1,6 +1,6 @@
-use crate::foundation::rough_fp::{rough_partial_cmp, rough_partial_eq};
 use crate::geometry::IterableSizeRange;
-use crate::geometry::unit::{Exp, Unit};
+use crate::math::rough_fp::{rough_partial_cmp, rough_partial_eq};
+use crate::math::unit::{Exp, Unit};
 use std::cmp::Ordering;
 use std::fmt::{self, Display, Formatter};
 use std::iter::Sum;
@@ -35,7 +35,9 @@ use std::ops::{
 /// assert_eq!(0.1.mm() * 3, 0.3.mm());
 /// ```
 #[derive(Clone, Copy, Debug, Default)]
-pub struct Size(f64);
+pub struct Size(
+   pub(crate) f64
+);
 
 impl Size {
    pub const ZERO: Size = Size(0.0);
@@ -188,6 +190,12 @@ impl Neg for Size {
 
 impl Unit for Size {}
 
+impl Exp<Size, 2> {
+   pub fn sqrt(self) -> Size {
+      Size(self.0.sqrt())
+   }
+}
+
 impl Mul<Size> for Size {
    type Output = Exp<Size, 2>;
    fn mul(self, rhs: Size) -> Exp<Size, 2> {
@@ -213,15 +221,15 @@ impl<const N: i32> Div<Size> for Exp<Size, N>
    }
 }
 
-impl Into<f64> for Exp<Size, 0> {
-   fn into(self) -> f64 {
-      self.0
+impl From<Exp<Size, 0>> for f64 {
+   fn from(exp: Exp<Size, 0>) -> f64 {
+      exp.0
    }
 }
 
-impl Into<Size> for Exp<Size, 1> {
-   fn into(self) -> Size {
-      Size(self.0)
+impl From<Exp<Size, 1>> for Size {
+   fn from(exp: Exp<Size, 1>) -> Size {
+      Size(exp.0)
    }
 }
 

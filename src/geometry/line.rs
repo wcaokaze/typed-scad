@@ -1,5 +1,6 @@
-use crate::geometry::{Plane, Point, Vector};
+use crate::geometry::{Angle, Plane, Point, Size, Vector};
 use crate::geometry::operators::Intersection;
+use crate::transform::Transform;
 
 /// Line in 3D.
 ///
@@ -56,6 +57,22 @@ impl PartialEq for Line {
                         || self.vector == -other.vector;
 
       same_direction && self.point() == other.point()
+   }
+}
+
+impl Transform for Line {
+   fn translated(&self, offset: &Vector) -> Self {
+      Line {
+         point: self.point.translated(offset),
+         vector: self.vector
+      }
+   }
+
+   fn rotated(&self, axis: &Line, angle: Angle) -> Self {
+      Line {
+         point: self.point.rotated(axis, angle),
+         vector: self.vector.rotated(&axis.vector, angle)
+      }
    }
 }
 
