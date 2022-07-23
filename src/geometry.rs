@@ -9,7 +9,7 @@ mod size;
 mod size_iterator;
 mod vector;
 
-pub use self::angle::{Angle, AngleLiteral};
+pub use self::angle::{Angle, AngleLiteral, acos, asin, atan, atan2, cos, sin, tan};
 pub use self::angle_iterator::{AngleIterator, IterableAngleRange};
 pub use self::line::Line;
 pub use self::plane::Plane;

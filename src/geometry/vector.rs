@@ -1,4 +1,4 @@
-use crate::geometry::{Angle, Size, SizeLiteral, Point};
+use crate::geometry::{Angle, Size, SizeLiteral, Point, sin, acos, cos};
 use crate::math::Matrix;
 use crate::math::unit::Exp;
 use std::iter::Sum;
@@ -79,7 +79,7 @@ impl Vector {
    }
 
    pub fn angle_with(&self, other: &Vector) -> Angle {
-      Angle::acos(
+      acos(
          (self.inner_product(other) / (self.norm() * other.norm())).into()
       )
    }
@@ -100,9 +100,9 @@ impl Vector {
       };
 
       Vector {
-         matrix: self.matrix * angle.cos()
-            + (1.0 - angle.cos()) * axis_vector
-            + axis_unit_vector.vector_product(&self).matrix * angle.sin()
+         matrix: self.matrix * cos(angle)
+            + (1.0 - cos(angle)) * axis_vector
+            + axis_unit_vector.vector_product(&self).matrix * sin(angle)
       }
    }
 }

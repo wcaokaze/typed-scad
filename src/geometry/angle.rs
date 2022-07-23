@@ -50,6 +50,34 @@ use std::ops::{
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Angle(f64);
 
+pub fn sin(angle: Angle) -> f64 {
+   angle.sin()
+}
+
+pub fn cos(angle: Angle) -> f64 {
+   angle.cos()
+}
+
+pub fn tan(angle: Angle) -> f64 {
+   angle.tan()
+}
+
+pub fn asin(a: f64) -> Angle {
+   Angle::asin(a)
+}
+
+pub fn acos(a: f64) -> Angle {
+   Angle::acos(a)
+}
+
+pub fn atan(a: f64) -> Angle {
+   Angle::atan(a)
+}
+
+pub fn atan2(y: Size, x: Size) -> Angle {
+   Angle::atan2(y, x)
+}
+
 impl Angle {
    /// PI radian. But `Angle::PI` is not enough readable.
    /// Also consider using `180.deg()`
