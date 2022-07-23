@@ -1,5 +1,6 @@
-use crate::geometry::{Size, Vector};
+use crate::geometry::{Angle, Line, Size, Vector};
 use crate::math::Matrix;
+use crate::transform::Transform;
 
 /// 3D Point.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -33,6 +34,23 @@ impl Point {
 
    pub fn distance(&self, another: &Point) -> Size {
       Vector::between(self, another).norm()
+   }
+}
+
+impl Transform for Point {
+   fn translated(&self, offset: &Vector) -> Point {
+      Point {
+         matrix: self.matrix + offset.matrix
+      }
+   }
+
+   fn rotated(&self, axis: &Line, angle: Angle) -> Point {
+      let rotation_origin = axis.point;
+
+      let mut v = Vector::between(&rotation_origin, &self);
+      v.rotate(&axis.vector, angle);
+
+      rotation_origin.translated(&v)
    }
 }
 
