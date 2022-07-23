@@ -42,6 +42,14 @@ impl<U: Unit, const M: usize, const N: usize> Matrix<U, M, N> {
          )
       )
    }
+
+   pub fn map<R: Unit>(self, mut f: impl FnMut(U) -> R) -> Matrix<R, M, N> {
+      let f = &mut f;
+
+      Matrix(
+         self.0.map(|column| column.map(|u| f(u)))
+      )
+   }
 }
 
 union Transmuter<T, const M: usize, const N: usize> {
@@ -124,6 +132,16 @@ macro_rules! mul_num {
                );
 
             Matrix(a)
+         }
+      }
+
+      impl<U: Unit, const M: usize, const N: usize> Mul<Matrix<U, M, N>> for $t
+         where U: Mul<$t>,
+               U::Output: Unit
+      {
+         type Output = Matrix<U::Output, M, N>;
+         fn mul(self, rhs: Matrix<U, M, N>) -> Self::Output {
+            rhs * self
          }
       }
    )+)
@@ -363,5 +381,12 @@ mod tests {
       };
 
       assert_eq!(a * b, expected);
+   }
+
+   #[test]
+   fn map() {
+      let actual = Matrix([[1.mm(), 2.mm(), 3.mm()]]).map(|s| s * 2);
+      let expected = Matrix([[2.mm(), 4.mm(), 6.mm()]]);
+      assert_eq!(actual, expected);
    }
 }

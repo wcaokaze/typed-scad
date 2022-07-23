@@ -1,7 +1,8 @@
+use crate::math::Matrix;
 use crate::math::rough_fp::rough_partial_eq;
 use std::iter::Sum;
 use std::marker::PhantomData;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::{Add, Div, Mul, MulAssign, Neg, Sub};
 
 /// Type which has a value as some unit.
 ///
@@ -178,6 +179,35 @@ impl<U: Unit, const N: i32> Sub for Exp<U, N> where U: Sub {
    }
 }
 
+macro_rules! mul {
+   ($($t:ty),+) => ($(
+      impl<U: Unit, const N: i32> Mul<$t> for Exp<U, N> where U: Mul<$t> {
+         type Output = Exp<U, N>;
+         fn mul(self, rhs: $t) -> Exp<U, N> {
+            unsafe { Exp::new(self.0 * rhs as f64) }
+         }
+      }
+
+      impl<U: Unit, const N: i32> Mul<Exp<U, N>> for $t where U: Mul<$t> {
+         type Output = Exp<U, N>;
+         fn mul(self, rhs: Exp<U, N>) -> Exp<U, N> {
+            rhs * self
+         }
+      }
+
+      impl<U: Unit, const N: i32> MulAssign<$t> for Exp<U, N>
+         where U: Mul<$t>,
+               Self: Copy
+      {
+         fn mul_assign(&mut self, rhs: $t) {
+            *self = *self * rhs;
+         }
+      }
+   )+)
+}
+
+mul!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64);
+
 impl<U: Unit, const NA: i32, const NB: i32>
    Mul<Exp<U, NB>> for Exp<U, NA>
    where Exp<U, {NA + NB}>: Sized
@@ -211,6 +241,18 @@ impl<U: Unit, const N: i32> Sum for Exp<U, N>
    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
       let sum = iter.map(|e| e.0).sum();
       unsafe { Exp::new(sum) }
+   }
+}
+
+impl<U: Unit, Rhs: Unit, const L: i32, const M: usize, const N: usize>
+   Mul<Matrix<Rhs, M, N>> for Exp<U, L>
+   where Rhs: Mul<Exp<U, L>>,
+         Rhs::Output: Unit,
+         U: Copy
+{
+   type Output = Matrix<Rhs::Output, M, N>;
+   fn mul(self, rhs: Matrix<Rhs, M, N>) -> Self::Output {
+      rhs * self
    }
 }
 

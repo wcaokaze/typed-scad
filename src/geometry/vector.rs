@@ -83,6 +83,28 @@ impl Vector {
          (self.inner_product(other) / (self.norm() * other.norm())).into()
       )
    }
+
+   pub fn rotate(&mut self, axis: &Vector, angle: Angle) {
+      *self = self.rotated(axis, angle);
+   }
+
+   pub fn rotated(&self, axis: &Vector, angle: Angle) -> Vector {
+      let axis_unit_vector = axis.to_unit_vector();
+
+      let axis_vector = {
+         let inner_product: Size = unsafe {
+            self.inner_product(&axis_unit_vector)
+               .operate_as::<Size, 1>().into()
+         };
+         axis.matrix * (inner_product / axis.norm())
+      };
+
+      Vector {
+         matrix: self.matrix * angle.cos()
+            + (1.0 - angle.cos()) * axis_vector
+            + axis_unit_vector.vector_product(&self).matrix * angle.sin()
+      }
+   }
 }
 
 impl Add for Vector {
@@ -323,5 +345,34 @@ mod tests {
          .sum();
 
       assert_eq!(sum, Vector::new(55.mm(), 55.mm(), 55.mm()));
+   }
+
+   #[test]
+   fn rotate() {
+      assert_eq!(
+         Vector::X_UNIT_VECTOR.rotated(&Vector::Y_UNIT_VECTOR, 90.deg()),
+         -Vector::Z_UNIT_VECTOR
+      );
+
+      assert_eq!(
+         Vector::Y_UNIT_VECTOR.rotated(&Vector::Z_UNIT_VECTOR, 90.deg()),
+         -Vector::X_UNIT_VECTOR
+      );
+
+      assert_eq!(
+         Vector::Z_UNIT_VECTOR.rotated(&Vector::X_UNIT_VECTOR, 90.deg()),
+         -Vector::Y_UNIT_VECTOR
+      );
+
+      let actual = Vector::X_UNIT_VECTOR
+         .rotated(&Vector::Z_UNIT_VECTOR, 45.deg());
+
+      let expected = Vector::new(
+         (1.0 / f64::sqrt(2.0)).mm(),
+         (1.0 / f64::sqrt(2.0)).mm(),
+         0.mm()
+      );
+
+      assert_eq!(actual, expected);
    }
 }
