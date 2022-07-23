@@ -1,7 +1,8 @@
-use crate::geometry::{Line, Point, Size, Vector};
+use crate::geometry::{Angle, Line, Point, Size, Vector};
 use crate::geometry::operators::Intersection;
 use crate::math::rough_fp::rough_partial_eq;
 use crate::math::unit::Exp;
+use crate::transform::Transform;
 
 /// Plane in 3D.
 ///
@@ -59,6 +60,22 @@ impl PartialEq for Plane {
                         || self.normal_vector == -other.normal_vector;
 
       same_direction && self.point() == other.point()
+   }
+}
+
+impl Transform for Plane {
+   fn translated(&self, offset: &Vector) -> Self {
+      Plane {
+         point: self.point.translated(offset),
+         normal_vector: self.normal_vector
+      }
+   }
+
+   fn rotated(&self, axis: &Line, angle: Angle) -> Self {
+      Plane {
+         point: self.point.rotated(axis, angle),
+         normal_vector: self.normal_vector.rotated(&axis.vector, angle)
+      }
    }
 }
 
