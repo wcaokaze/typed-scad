@@ -2,4 +2,5 @@
 
 pub mod geometry;
 pub mod math;
+pub mod solid;
 pub mod transform;

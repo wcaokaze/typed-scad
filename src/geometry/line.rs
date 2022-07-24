@@ -1,4 +1,4 @@
-use crate::geometry::{Angle, Plane, Point, Size, Vector};
+use crate::geometry::{Angle, Plane, Point, Vector};
 use crate::geometry::operators::Intersection;
 use crate::transform::Transform;
 
