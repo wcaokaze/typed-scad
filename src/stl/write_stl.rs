@@ -1,5 +1,5 @@
 use crate::geometry::{Point, Size, Vector};
-use crate::stl_solid::{Facet, StlSolid};
+use crate::stl::stl_solid::{Facet, StlSolid};
 use anyhow::Result;
 use std::io::Write;
 use thiserror::Error;
@@ -72,11 +72,11 @@ mod tests {
    use super::write_stl;
    use crate::geometry::{Point, Size};
    use crate::math::rough_fp::rough_partial_eq;
-   use crate::stl_solid::{Facet, StlSolid};
+   use crate::stl::stl_solid::{Facet, StlSolid};
 
    macro_rules! solid {
       ($($f:expr),+) => (
-         Solid {
+         StlSolid {
             facets: vec![$($f),+]
          }
       );
