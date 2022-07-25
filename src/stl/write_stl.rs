@@ -1,5 +1,5 @@
 use crate::geometry::{Point, Size, Vector};
-use crate::solid::{Facet, Solid};
+use crate::stl_solid::{Facet, StlSolid};
 use anyhow::Result;
 use std::io::Write;
 use thiserror::Error;
@@ -11,7 +11,7 @@ pub enum StlWriteError {
 }
 
 /// Write the specified Solid as binary STL.
-pub fn write_stl(output: &mut dyn Write, solid: &Solid) -> Result<()> {
+pub fn write_stl(output: &mut dyn Write, solid: &StlSolid) -> Result<()> {
    write_header(output)?;
    write_facets_count(output, solid.facets.len())?;
    for f in &solid.facets {
@@ -72,7 +72,7 @@ mod tests {
    use super::write_stl;
    use crate::geometry::{Point, Size};
    use crate::math::rough_fp::rough_partial_eq;
-   use crate::solid::{Facet, Solid};
+   use crate::stl_solid::{Facet, StlSolid};
 
    macro_rules! solid {
       ($($f:expr),+) => (

@@ -2,7 +2,7 @@ use crate::geometry::{Angle, Line, Point, Vector};
 use crate::transform::Transform;
 
 /// STL Solid. This can be written as STL. (See [crate::stl::write_stl])
-pub struct Solid {
+pub struct StlSolid {
    pub(crate) facets: Vec<Facet>
 }
 
@@ -18,8 +18,8 @@ impl Facet {
    }
 }
 
-impl Transform for Solid {
-   fn translated(&self, offset: &Vector) -> Solid {
+impl Transform for StlSolid {
+   fn translated(&self, offset: &Vector) -> StlSolid {
       let facets = self.facets.iter()
          .map(|f| {
             let vertexes = f.vertexes.map(|v| v.translated(offset));
@@ -27,10 +27,10 @@ impl Transform for Solid {
          })
          .collect();
 
-      Solid { facets }
+      StlSolid { facets }
    }
 
-   fn rotated(&self, axis: &Line, angle: Angle) -> Solid {
+   fn rotated(&self, axis: &Line, angle: Angle) -> StlSolid {
       let facets = self.facets.iter()
          .map(|f| {
             let vertexes = f.vertexes.map(|v| v.rotated(axis, angle));
@@ -38,7 +38,7 @@ impl Transform for Solid {
          })
          .collect();
 
-      Solid { facets }
+      StlSolid { facets }
    }
 }
 
