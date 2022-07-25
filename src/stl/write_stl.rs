@@ -69,10 +69,10 @@ fn write_size(output: &mut dyn Write, size: Size) -> Result<()> {
 
 #[cfg(test)]
 mod tests {
+   use super::write_stl;
    use crate::geometry::{Point, Size};
    use crate::math::rough_fp::rough_partial_eq;
    use crate::solid::{Facet, Solid};
-   use crate::stl::write_stl;
 
    macro_rules! solid {
       ($($f:expr),+) => (
