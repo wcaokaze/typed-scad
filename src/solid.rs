@@ -1,6 +1,7 @@
 use crate::geometry::{Angle, Line, Point, Vector};
 use crate::transform::Transform;
 
+/// STL Solid. This can be written as STL. (See [crate::stl::write_stl])
 pub struct Solid {
    pub(crate) facets: Vec<Facet>
 }

@@ -10,6 +10,7 @@ pub enum StlWriteError {
    TooManyFacets,
 }
 
+/// Write the specified Solid as binary STL.
 pub fn write_stl(output: &mut dyn Write, solid: &Solid) -> Result<()> {
    write_header(output)?;
    write_facets_count(output, solid.facets.len())?;
