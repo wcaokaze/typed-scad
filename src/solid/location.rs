@@ -1,5 +1,6 @@
-use crate::geometry::{AngleLiteral, Point, Vector};
+use crate::geometry::{Angle, AngleLiteral, Line, Point, Vector};
 use crate::solid::LocationBuilder;
+use crate::transform::Transform;
 
 /// [Point] and Direction in 3D.
 ///
@@ -62,6 +63,10 @@ impl Location {
       LocationBuilder::new(point)
    }
 
+   pub fn point(&self) -> Point {
+      self.point
+   }
+
    pub fn left_vector(&self) -> Vector {
       -self.right_vector
    }
@@ -93,6 +98,24 @@ impl Default for Location {
          point: Point::ORIGIN,
          right_vector: Vector::X_UNIT_VECTOR,
          back_vector: Vector::Y_UNIT_VECTOR
+      }
+   }
+}
+
+impl Transform for Location {
+   fn translated(&self, offset: &Vector) -> Location {
+      Location {
+         point: self.point.translated(offset),
+         right_vector: self.right_vector,
+         back_vector: self.back_vector
+      }
+   }
+
+   fn rotated(&self, axis: &Line, angle: Angle) -> Location {
+      Location {
+         point: self.point.rotated(axis, angle),
+         right_vector: self.right_vector.rotated(axis.vector(), angle),
+         back_vector: self.back_vector.rotated(axis.vector(), angle)
       }
    }
 }
