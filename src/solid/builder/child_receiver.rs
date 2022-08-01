@@ -2,7 +2,7 @@ use std::ops::ShlAssign;
 use crate::solid::{Solid, SolidParent};
 
 pub struct ChildReceiver<'a, P: SolidParent + ?Sized> {
-   parent: &'a mut P
+   pub(crate) parent: &'a mut P
 }
 
 impl<'a, P: SolidParent + ?Sized> ChildReceiver<'a, P> {
@@ -11,7 +11,7 @@ impl<'a, P: SolidParent + ?Sized> ChildReceiver<'a, P> {
    }
 }
 
-impl<'a, P: SolidParent, S: Solid + 'static>
+impl<'a, P: SolidParent + ?Sized, S: Solid + 'static>
    ShlAssign<S> for ChildReceiver<'a, P>
 {
    fn shl_assign(&mut self, rhs: S) {
