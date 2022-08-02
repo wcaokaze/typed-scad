@@ -1,6 +1,7 @@
 use std::any::Any;
 use std::cell::{RefCell, UnsafeCell};
 use std::collections::HashMap;
+use std::mem;
 use std::ops::Deref;
 
 thread_local! {
@@ -8,6 +9,16 @@ thread_local! {
 
    static ENV_MAP: UnsafeCell<HashMap<u32, RefCell<Box<dyn Any>>>>
       = UnsafeCell::new(HashMap::new());
+}
+
+pub fn env<T: 'static>(
+   env: &BuildEnv<T>,
+   value: T,
+   build_action: impl FnOnce() -> ()
+) {
+   let old_value = mem::replace(env.get_mut(), value);
+   build_action();
+   *env.get_mut() = old_value;
 }
 
 pub struct BuildEnv<T: 'static> {
@@ -24,11 +35,8 @@ impl<T: 'static> BuildEnv<T> {
          default: Box::new(default)
       }
    }
-}
 
-impl<T: 'static> Deref for BuildEnv<T> {
-   type Target = T;
-   fn deref(&self) -> &T {
+   fn get_mut(&self) -> &mut T {
       ENV_MAP.with(|m| {
          let map = unsafe { &mut *m.get() };
          let cell = map.entry(self.id).or_insert_with(|| {
@@ -36,18 +44,25 @@ impl<T: 'static> Deref for BuildEnv<T> {
             RefCell::new(Box::new(default))
          });
 
-         let r = cell.borrow().downcast_ref().unwrap() as *const _;
+         let r = cell.borrow_mut().downcast_mut().unwrap() as *mut _;
 
          // borrow as longer lifetime.
          // This is safe since any entry in ENV_MAP is never removed.
-         unsafe { &*r }
+         unsafe { &mut *r }
       })
+   }
+}
+
+impl<T: 'static> Deref for BuildEnv<T> {
+   type Target = T;
+   fn deref(&self) -> &T {
+      self.get_mut()
    }
 }
 
 #[cfg(test)]
 mod tests {
-   use crate::solid::builder::BuildEnv;
+   use super::{BuildEnv, env};
 
    #[test]
    fn id() {
@@ -61,10 +76,32 @@ mod tests {
    }
 
    #[test]
-   fn default() {
+   fn set_env() {
       let a = BuildEnv::<i32>::new(|| 0);
       let b = BuildEnv::<i32>::new(|| 42);
       let c = BuildEnv::<String>::new(|| "wcaokaze".to_string());
+
+      assert_eq!(*a, 0);
+      assert_eq!(*b, 42);
+      assert_eq!(&*c, "wcaokaze");
+
+      env(&a, 1, || {
+         assert_eq!(*a, 1);
+         assert_eq!(*b, 42);
+         assert_eq!(&*c, "wcaokaze");
+
+         env(&b, 2, || {
+            assert_eq!(*a, 1);
+            assert_eq!(*b, 2);
+            assert_eq!(&*c, "wcaokaze");
+         });
+
+         env(&c, "a".to_string(), || {
+            assert_eq!(*a, 1);
+            assert_eq!(*b, 42);
+            assert_eq!(&*c, "a");
+         });
+      });
 
       assert_eq!(*a, 0);
       assert_eq!(*b, 42);
