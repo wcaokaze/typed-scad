@@ -3,6 +3,7 @@ use std::cell::{RefCell, UnsafeCell};
 use std::collections::HashMap;
 use std::mem;
 use std::ops::Deref;
+use once_cell::sync::Lazy;
 
 thread_local! {
    static NEXT_ID: RefCell<u32> = RefCell::new(0);
@@ -23,15 +24,17 @@ pub fn env<T: 'static, D: Fn() -> T>(
 }
 
 pub struct BuildEnv<T: 'static, D: Fn() -> T = fn() -> T> {
-   id: u32,
+   id: Lazy<u32>,
    default: D
 }
 
 impl<T: 'static, D: Fn() -> T> BuildEnv<T, D> {
-   pub fn new(default: D) -> BuildEnv<T, D> {
+   pub const fn new(default: D) -> BuildEnv<T, D> {
       BuildEnv {
-         id: NEXT_ID.with(|cell|
-            cell.replace_with(|i| *i + 1)
+         id: Lazy::new(||
+            NEXT_ID.with(|cell|
+               cell.replace_with(|i| *i + 1)
+            )
          ),
          default
       }
@@ -40,7 +43,7 @@ impl<T: 'static, D: Fn() -> T> BuildEnv<T, D> {
    fn cell_inner_mut(&self) -> &mut Box<dyn Any> {
       ENV_MAP.with(|m| {
          let map = unsafe { &mut *m.get() };
-         let cell = map.entry(self.id).or_insert_with(|| {
+         let cell = map.entry(*self.id).or_insert_with(|| {
             let default = (self.default)();
             RefCell::new(Box::new(default))
          });
@@ -73,9 +76,9 @@ mod tests {
       let b = BuildEnv::<()>::new(|| ());
       let c = BuildEnv::<()>::new(|| ());
 
-      assert_eq!(a.id, 0);
-      assert_eq!(b.id, 1);
-      assert_eq!(c.id, 2);
+      assert_eq!(*a.id, 0);
+      assert_eq!(*b.id, 1);
+      assert_eq!(*c.id, 2);
    }
 
    #[test]
