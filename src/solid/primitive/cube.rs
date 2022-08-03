@@ -14,6 +14,10 @@ impl Cube {
    }
 }
 
+pub fn cube(location: Location, size: (Size, Size, Size)) -> Cube {
+   Cube::new(location, size)
+}
+
 impl Solid for Cube {
    fn generate_stl_solid(&self) -> StlSolid {
       let point = self.location.point();
@@ -77,7 +81,7 @@ impl Transform for Cube {
 
 #[cfg(test)]
 mod tests {
-   use super::Cube;
+   use super::cube;
    use crate::geometry::{Point, SizeLiteral, Vector};
    use crate::solid::{Location, Solid};
    use crate::stl::Facet;
@@ -99,7 +103,7 @@ mod tests {
          );
       }
 
-      let cube = Cube::new(Location::default(), (1.mm(), 1.mm(), 1.mm()));
+      let cube = cube(Location::default(), (1.mm(), 1.mm(), 1.mm()));
       let solid = cube.generate_stl_solid();
 
       let expected_points = [
