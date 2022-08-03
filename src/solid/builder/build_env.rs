@@ -11,8 +11,8 @@ thread_local! {
       = UnsafeCell::new(HashMap::new());
 }
 
-pub fn env<T: 'static>(
-   env: &BuildEnv<T>,
+pub fn env<T: 'static, D: Fn() -> T>(
+   env: &BuildEnv<T, D>,
    value: T,
    build_action: impl FnOnce() -> ()
 ) {
@@ -22,18 +22,18 @@ pub fn env<T: 'static>(
    *cell_inner_mut = old_value;
 }
 
-pub struct BuildEnv<T: 'static> {
+pub struct BuildEnv<T: 'static, D: Fn() -> T = fn() -> T> {
    id: u32,
-   default: Box<dyn Fn() -> T>
+   default: D
 }
 
-impl<T: 'static> BuildEnv<T> {
-   pub fn new(default: impl Fn() -> T + 'static) -> BuildEnv<T> {
+impl<T: 'static, D: Fn() -> T> BuildEnv<T, D> {
+   pub fn new(default: D) -> BuildEnv<T, D> {
       BuildEnv {
          id: NEXT_ID.with(|cell|
             cell.replace_with(|i| *i + 1)
          ),
-         default: Box::new(default)
+         default
       }
    }
 
@@ -55,7 +55,7 @@ impl<T: 'static> BuildEnv<T> {
    }
 }
 
-impl<T: 'static> Deref for BuildEnv<T> {
+impl<T: 'static, D: Fn() -> T> Deref for BuildEnv<T, D> {
    type Target = T;
    fn deref(&self) -> &T {
       let r = self.cell_inner_mut();

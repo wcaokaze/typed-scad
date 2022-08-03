@@ -8,6 +8,7 @@ mod solid_parent;
 
 pub use location::Location;
 pub use location_builder::LocationBuilder;
-pub use primitive::cube::Cube;
+pub use primitive::cube::{cube, Cube};
+pub use primitive::precision;
 pub use solid::Solid;
 pub use solid_parent::SolidParent;

@@ -1,4 +1,4 @@
-#![feature(array_zip, generic_const_exprs, never_type)]
+#![feature(array_zip, generic_const_exprs, never_type, once_cell)]
 
 pub mod geometry;
 pub mod math;
