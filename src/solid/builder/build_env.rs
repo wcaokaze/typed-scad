@@ -16,9 +16,10 @@ pub fn env<T: 'static>(
    value: T,
    build_action: impl FnOnce() -> ()
 ) {
-   let old_value = mem::replace(env.get_mut(), value);
+   let cell_inner_mut = env.cell_inner_mut();
+   let old_value = mem::replace(cell_inner_mut, Box::new(value));
    build_action();
-   *env.get_mut() = old_value;
+   *cell_inner_mut = old_value;
 }
 
 pub struct BuildEnv<T: 'static> {
@@ -36,7 +37,7 @@ impl<T: 'static> BuildEnv<T> {
       }
    }
 
-   fn get_mut(&self) -> &mut T {
+   fn cell_inner_mut(&self) -> &mut Box<dyn Any> {
       ENV_MAP.with(|m| {
          let map = unsafe { &mut *m.get() };
          let cell = map.entry(self.id).or_insert_with(|| {
@@ -44,10 +45,11 @@ impl<T: 'static> BuildEnv<T> {
             RefCell::new(Box::new(default))
          });
 
-         let r = cell.borrow_mut().downcast_mut().unwrap() as *mut _;
+         let r: &mut Box<_> = &mut *cell.borrow_mut();
 
          // borrow as longer lifetime.
-         // This is safe since any entry in ENV_MAP is never removed.
+         // This is safe since any RefCell in ENV_MAP is never removed.
+         let r = r as *mut _;
          unsafe { &mut *r }
       })
    }
@@ -56,7 +58,8 @@ impl<T: 'static> BuildEnv<T> {
 impl<T: 'static> Deref for BuildEnv<T> {
    type Target = T;
    fn deref(&self) -> &T {
-      self.get_mut()
+      let r = self.cell_inner_mut();
+      r.downcast_ref().unwrap()
    }
 }
 
@@ -106,5 +109,19 @@ mod tests {
       assert_eq!(*a, 0);
       assert_eq!(*b, 42);
       assert_eq!(&*c, "wcaokaze");
+   }
+
+   #[test]
+   fn outer_scope_env() {
+      let a = BuildEnv::new(|| 0);
+      let outer_a_ref = &*a;
+
+      env(&a, 1, || {
+         let a_ref = &*a;
+
+         assert_ne!(outer_a_ref as *const _, a_ref as *const _);
+         assert_eq!(*outer_a_ref, 0);
+         assert_eq!(*a_ref, 1);
+      });
    }
 }
