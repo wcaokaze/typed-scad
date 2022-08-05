@@ -8,6 +8,7 @@ mod solid_parent;
 
 pub use location::Location;
 pub use location_builder::LocationBuilder;
+pub use primitive::cone::{cone, Cone};
 pub use primitive::cube::{cube, Cube};
 pub use primitive::cylinder::{cylinder, Cylinder};
 pub use primitive::precision;

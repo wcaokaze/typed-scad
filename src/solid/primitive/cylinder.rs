@@ -125,7 +125,7 @@ mod tests {
          let cylinder = cylinder(Location::default(), 3.mm(), 5.mm());
          let solid = cylinder.generate_stl_solid();
 
-         assert_eq!(solid.facets.len(), fragment_count() * 4);
+         assert_eq!(solid.facets.len(), 4);
       });
    }
 
@@ -160,7 +160,7 @@ mod tests {
                .vector_product(&Vector::Z_UNIT_VECTOR)
                .to_unit_vector();
             let actual = facet.normal_vector();
-            assert_eq!(actual, expected, "at facet {}", pos);
+            assert_eq!(actual, expected, "at facet {pos}");
          });
    }
 
