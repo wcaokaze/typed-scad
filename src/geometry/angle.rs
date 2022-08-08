@@ -1,4 +1,4 @@
-use crate::geometry::{IterableAngleRange, Size};
+use crate::geometry::Size;
 use crate::math::rough_fp::{rough_partial_cmp, rough_partial_eq};
 use crate::math::unit::{Exp, Unit};
 use std::cmp::Ordering;
@@ -6,6 +6,7 @@ use std::fmt::{self, Display, Formatter};
 use std::ops::{
    Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign
 };
+use crate::geometry::angle_iterator::AngleIteratorBuilder;
 
 /// Angle.
 ///
@@ -48,7 +49,9 @@ use std::ops::{
 /// assert_ne!(0.deg(), 360.deg());
 /// ```
 #[derive(Clone, Copy, Debug, Default)]
-pub struct Angle(f64);
+pub struct Angle(
+   pub(crate) f64
+);
 
 pub fn sin(angle: Angle) -> f64 {
    angle.sin()
@@ -138,22 +141,22 @@ impl Angle {
    }
 
    /// Prepare to iterate [Angle]s in the specified range.
-   /// And [step][IterableAngleRange::step] returns an [Iterator] for Angle.
+   /// And [step][AngleIteratorBuilder::step] returns an [Iterator] for Angle.
    ///
    /// ```
-   /// # use typed_scad::geometry::{Angle, AngleLiteral, IterableAngleRange};
+   /// # use typed_scad::geometry::{Angle, AngleLiteral};
    /// let iter = Angle::iterate(0.deg()..=3.deg()).step(1.deg());
    /// assert_eq!(iter.collect::<Vec<_>>(), vec![0.deg(), 1.deg(), 2.deg(), 3.deg()]);
    /// ```
    ///
    /// Negative steps are also available.
    /// ```
-   /// # use typed_scad::geometry::{Angle, AngleLiteral, IterableAngleRange};
+   /// # use typed_scad::geometry::{Angle, AngleLiteral};
    /// let iter = Angle::iterate(3.deg()..=0.deg()).step(-1.deg());
    /// assert_eq!(iter.collect::<Vec<_>>(), vec![3.deg(), 2.deg(), 1.deg(), 0.deg()]);
    /// ```
-   pub fn iterate<R>(angle_range: R) -> R where R: IterableAngleRange {
-      angle_range
+   pub fn iterate<R>(angle_range: R) -> AngleIteratorBuilder<R> {
+      AngleIteratorBuilder(angle_range)
    }
 }
 

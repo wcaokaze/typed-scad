@@ -1,4 +1,4 @@
-use crate::geometry::{Angle, AngleLiteral, IterableAngleRange, Line, Size, Vector};
+use crate::geometry::{Angle, AngleLiteral, Line, Size, Vector};
 use crate::solid::{Location, Solid};
 use crate::solid::precision::FRAGMENT_MINIMUM_ANGLE;
 use crate::stl::{Facet, StlSolid};

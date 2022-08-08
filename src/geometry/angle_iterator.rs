@@ -1,43 +1,96 @@
 use crate::geometry::{Angle, AngleLiteral};
-use std::ops::{Bound, Range, RangeBounds, RangeFrom, RangeInclusive};
+use std::ops::{Range, RangeFrom, RangeInclusive};
+use crate::math::rough_fp::FLOAT_POINT_ALLOWABLE_ERROR;
+
+pub struct AngleIteratorBuilder<R>(pub R);
+
+impl AngleIteratorBuilder<Range<Angle>> {
+   pub fn step(self, step: Angle) -> AngleIterator {
+      let start = self.0.start;
+      let end = self.0.end;
+
+      let len = if start < end {
+         if step < 0.rad() {
+            0
+         } else {
+            ((end.0 - FLOAT_POINT_ALLOWABLE_ERROR - start.0) / step.0)
+               as usize + 1
+         }
+      } else {
+         if step > 0.rad() {
+            0
+         } else {
+            ((end.0 + FLOAT_POINT_ALLOWABLE_ERROR - start.0) / step.0)
+               as usize + 1
+         }
+      };
+
+      AngleIterator::new(start, step, len as usize)
+   }
+}
+
+impl AngleIteratorBuilder<RangeInclusive<Angle>> {
+   pub fn step(self, step: Angle) -> AngleIterator {
+      let start = *self.0.start();
+      let end = *self.0.end();
+
+      let len = if start < end {
+         if step < 0.rad() {
+            0
+         } else {
+            ((end.0 + FLOAT_POINT_ALLOWABLE_ERROR - start.0) / step.0)
+               as usize + 1
+         }
+      } else {
+         if step > 0.rad() {
+            0
+         } else {
+            ((end.0 - FLOAT_POINT_ALLOWABLE_ERROR - start.0) / step.0)
+               as usize + 1
+         }
+      };
+
+      AngleIterator::new(start, step, len)
+   }
+}
+
+impl AngleIteratorBuilder<RangeFrom<Angle>> {
+   pub fn step(self, step: Angle) -> AngleIteratorInfinite {
+      let start = self.0.start;
+      AngleIteratorInfinite::new(start, step)
+   }
+}
 
 /// An [Iterator] for [Angle].
 pub struct AngleIterator {
-   next: Option<Angle>,
+   next: Angle,
+   next_index: usize,
    step: Angle,
-   end_bound: Bound<Angle>
+   len: usize
+}
+
+/// An [Iterator] for [Angle].
+pub struct AngleIteratorInfinite {
+   next: Angle,
+   step: Angle
 }
 
 impl AngleIterator {
-   fn new(
-      start_value: Angle, step: Angle, end_bound: Bound<Angle>
-   ) -> AngleIterator {
-      let is_iterable = Self::is_available_value(start_value, end_bound, step);
-
+   fn new(start: Angle, step: Angle, len: usize) -> AngleIterator {
       AngleIterator {
-         next: if is_iterable { Some(start_value) } else { None },
+         next: start,
+         next_index: 1,
          step,
-         end_bound
+         len
       }
    }
+}
 
-   fn calc_next(&self, current: Angle) -> Option<Angle> {
-      let next = current + self.step;
-      let has_next = Self::is_available_value(next, self.end_bound, self.step);
-      if has_next { Some(next) } else { None }
-   }
-
-   fn is_available_value(
-      value: Angle,
-      end_bound: Bound<Angle>,
-      step: Angle
-   ) -> bool {
-      match end_bound {
-         Bound::Included(end) =>
-            if step > 0.rad() { value <= end } else { value >= end },
-         Bound::Excluded(end) =>
-            if step > 0.rad() { value <  end } else { value >  end },
-         Bound::Unbounded => true
+impl AngleIteratorInfinite {
+   fn new(start: Angle, step: Angle) -> AngleIteratorInfinite {
+      AngleIteratorInfinite {
+         next: start,
+         step,
       }
    }
 }
@@ -46,51 +99,27 @@ impl Iterator for AngleIterator {
    type Item = Angle;
 
    fn next(&mut self) -> Option<Angle> {
-      let next = self.next?;
-      self.next = self.calc_next(next);
+      let next = self.next;
+      if self.next_index > self.len { return None; }
+
+      self.next_index += 1;
+      self.next += self.step;
       Some(next)
    }
 }
 
-/// Range that can iterate with [Angle::iterate].
-///
-/// The follow 3 range types are iterable.
-/// - [Range] `0.deg()..3.deg()`
-/// - [RangeInclusive] `0.deg()..=3.deg()`
-/// - [RangeFrom] `0.deg()..`
-pub trait IterableAngleRange: RangeBounds<Angle> {
-   fn start_value(&self) -> Angle;
+impl Iterator for AngleIteratorInfinite {
+   type Item = Angle;
 
-   fn step(self, step: Angle) -> AngleIterator where Self: Sized {
-      AngleIterator::new(
-         self.start_value(),
-         step,
-         self.end_bound().cloned()
-      )
-   }
-}
-
-impl IterableAngleRange for Range<Angle> {
-   fn start_value(&self) -> Angle {
-      self.start
-   }
-}
-
-impl IterableAngleRange for RangeInclusive<Angle> {
-   fn start_value(&self) -> Angle {
-      *self.start()
-   }
-}
-
-impl IterableAngleRange for RangeFrom<Angle> {
-   fn start_value(&self) -> Angle {
-      self.start
+   fn next(&mut self) -> Option<Angle> {
+      let next = self.next;
+      self.next += self.step;
+      Some(next)
    }
 }
 
 #[cfg(test)]
 mod tests {
-   use super::IterableAngleRange;
    use crate::geometry::{Angle, AngleLiteral};
 
    #[test]
