@@ -1,3 +1,6 @@
+use crate::geometry::angle_iterator::{
+   AngleIteratorBuilder, AngleParallelIteratorBuilder
+};
 use crate::geometry::Size;
 use crate::math::rough_fp::{rough_partial_cmp, rough_partial_eq};
 use crate::math::unit::{Exp, Unit};
@@ -6,7 +9,6 @@ use std::fmt::{self, Display, Formatter};
 use std::ops::{
    Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign
 };
-use crate::geometry::angle_iterator::AngleIteratorBuilder;
 
 /// Angle.
 ///
@@ -157,6 +159,14 @@ impl Angle {
    /// ```
    pub fn iterate<R>(angle_range: R) -> AngleIteratorBuilder<R> {
       AngleIteratorBuilder(angle_range)
+   }
+
+   /// similar to [iterate], but par_iterate returns a [Rayon] ParallelIterator.
+   ///
+   /// [iterate]: Angle::iterate
+   /// [Rayon]: https://docs.rs/rayon/latest/rayon/
+   pub fn par_iterate<R>(angle_range: R) -> AngleParallelIteratorBuilder<R> {
+      AngleParallelIteratorBuilder(angle_range)
    }
 }
 
