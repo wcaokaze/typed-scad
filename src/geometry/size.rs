@@ -1,4 +1,6 @@
-use crate::geometry::IterableSizeRange;
+use crate::geometry::size_iterator::{
+   SizeIteratorBuilder, SizeParallelIteratorBuilder
+};
 use crate::math::rough_fp::{rough_partial_cmp, rough_partial_eq};
 use crate::math::unit::{Exp, Unit};
 use std::cmp::Ordering;
@@ -58,22 +60,30 @@ impl Size {
    }
 
    /// Prepare to iterate [Size]s in the specified range.
-   /// And [step](IterableSizeRange::step) returns an [Iterator] for Size.
+   /// And [step](SizeIteratorBuilder::step) returns an [Iterator] for Size.
    ///
    /// ```
-   /// # use typed_scad::geometry::{IterableSizeRange, Size, SizeLiteral};
+   /// # use typed_scad::geometry::{Size, SizeLiteral};
    /// let iter = Size::iterate(0.mm()..=3.mm()).step(1.mm());
    /// assert_eq!(iter.collect::<Vec<_>>(), vec![0.mm(), 1.mm(), 2.mm(), 3.mm()]);
    /// ```
    ///
    /// Negative steps are also available.
    /// ```
-   /// # use typed_scad::geometry::{IterableSizeRange, Size, SizeLiteral};
+   /// # use typed_scad::geometry::{Size, SizeLiteral};
    /// let iter = Size::iterate(3.mm()..=0.mm()).step(-1.mm());
    /// assert_eq!(iter.collect::<Vec<_>>(), vec![3.mm(), 2.mm(), 1.mm(), 0.mm()]);
    /// ```
-   pub fn iterate<R>(size_range: R) -> R where R: IterableSizeRange {
-      size_range
+   pub fn iterate<R>(size_range: R) -> SizeIteratorBuilder<R> {
+      SizeIteratorBuilder(size_range)
+   }
+
+   /// similar to [iterate], but par_iterate returns a [Rayon] ParallelIterator.
+   ///
+   /// [iterate]: Size::iterate
+   /// [Rayon]: https://docs.rs/rayon/latest/rayon/
+   pub fn par_iterate<R>(size_range: R) -> SizeParallelIteratorBuilder<R> {
+      SizeParallelIteratorBuilder(size_range)
    }
 
    pub fn abs(self) -> Size {

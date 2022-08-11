@@ -20,5 +20,8 @@ pub use self::line::Line;
 pub use self::plane::Plane;
 pub use self::point::Point;
 pub use self::size::{Size, SizeLiteral};
-pub use self::size_iterator::{IterableSizeRange, SizeIterator};
+pub use self::size_iterator::{
+   SizeIterator, SizeIteratorBuilder, SizeIteratorInfinite,
+   SizeParallelIterator, SizeParallelIteratorBuilder
+};
 pub use self::vector::Vector;
