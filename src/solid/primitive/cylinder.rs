@@ -3,6 +3,9 @@ use crate::solid::{Location, Solid};
 use crate::solid::precision::FRAGMENT_MINIMUM_ANGLE;
 use crate::stl::{Facet, StlSolid};
 use crate::transform::Transform;
+use rayon::prelude::{
+   IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator
+};
 
 pub struct Cylinder {
    pub location: Location,
@@ -32,23 +35,23 @@ impl Solid for Cylinder {
       let top_point = bottom_point.translated_toward(top, height);
 
       let bottom_points: Vec<_>
-         = Angle::iterate(0.deg()..360.deg()).step(minimum_angle)
+         = Angle::par_iterate(0.deg()..360.deg()).step(minimum_angle)
          .map(|a| back.rotated(top, a))
          .map(|v| bottom_point.translated_toward(&v, radius))
          .collect();
 
       let top_points: Vec<_>
-         = bottom_points.iter()
+         = bottom_points.par_iter()
          .map(|p| p.translated_toward(top, height))
          .collect();
 
       let first_bottom = bottom_points.first();
-      let shifted_bottom = bottom_points.iter().skip(1).chain(first_bottom);
-      let zipped_bottom_points = bottom_points.iter().zip(shifted_bottom);
+      let shifted_bottom = bottom_points.par_iter().skip(1).chain(first_bottom);
+      let zipped_bottom_points = bottom_points.par_iter().zip(shifted_bottom);
 
       let first_top = top_points.first();
-      let shifted_top = top_points.iter().skip(1).chain(first_top);
-      let zipped_top_points = top_points.iter().zip(shifted_top);
+      let shifted_top = top_points.par_iter().skip(1).chain(first_top);
+      let zipped_top_points = top_points.par_iter().zip(shifted_top);
 
       let bottom_facets = zipped_bottom_points.clone().map(|(a, b)|
          Facet { vertexes: [bottom_point, *b, *a] }
@@ -187,13 +190,15 @@ mod tests {
       let bottom_center = Point::ORIGIN;
       bottom_vertexes.iter()
          .filter(|&&v| v != bottom_center)
-         .map(|v| Vector::between(&bottom_center, v))
-         .for_each(|v| assert_eq!(v.norm(), 5.mm()));
+         .for_each(|v|
+            assert_eq!(bottom_center.distance(v), 5.mm())
+         );
 
       let top_center = Point::new(0.mm(), 0.mm(), 3.mm());
       top_vertexes.iter()
          .filter(|&&v| v != top_center)
-         .map(|v| Vector::between(&top_center, v))
-         .for_each(|v| assert_eq!(v.norm(), 5.mm()));
+         .for_each(|v|
+            assert_eq!(top_center.distance(v), 5.mm())
+         );
    }
 }
