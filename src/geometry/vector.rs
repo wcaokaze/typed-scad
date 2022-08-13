@@ -1,13 +1,14 @@
 use crate::geometry::{Angle, Size, SizeLiteral, Point, sin, acos, cos};
 use crate::math::Matrix;
 use crate::math::unit::Exp;
+use std::fmt::{self, Debug, Display, Formatter};
 use std::iter::Sum;
 use std::ops::{
    Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign
 };
 
 /// 3D Vector.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 pub struct Vector {
    pub matrix: Matrix<Size, 3, 1>
 }
@@ -104,6 +105,18 @@ impl Vector {
             + (1.0 - cos(angle)) * axis_vector
             + axis_unit_vector.vector_product(&self).matrix * sin(angle)
       }
+   }
+}
+
+impl Display for Vector {
+   fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+      write!(f, "({}, {}, {})", self.x(), self.y(), self.z())
+   }
+}
+
+impl Debug for Vector {
+   fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+      write!(f, "Vector{}", self)
    }
 }
 

@@ -1,9 +1,10 @@
 use crate::geometry::{Angle, Line, Size, Vector};
 use crate::math::Matrix;
 use crate::transform::Transform;
+use std::fmt::{self, Debug, Display, Formatter};
 
 /// 3D Point.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 pub struct Point {
    pub matrix: Matrix<Size, 3, 1>
 }
@@ -34,6 +35,18 @@ impl Point {
 
    pub fn distance(&self, another: &Point) -> Size {
       Vector::between(self, another).norm()
+   }
+}
+
+impl Display for Point {
+   fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+      write!(f, "({}, {}, {})", self.x(), self.y(), self.z())
+   }
+}
+
+impl Debug for Point {
+   fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+      write!(f, "Point{}", self)
    }
 }
 

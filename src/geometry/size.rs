@@ -4,7 +4,7 @@ use crate::geometry::size_iterator::{
 use crate::math::rough_fp::{rough_partial_cmp, rough_partial_eq};
 use crate::math::unit::{Exp, Unit};
 use std::cmp::Ordering;
-use std::fmt::{self, Display, Formatter};
+use std::fmt::{self, Debug, Display, Formatter};
 use std::iter::Sum;
 use std::ops::{
    Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign
@@ -36,7 +36,7 @@ use std::ops::{
 /// assert_ne!(0.1 * 3.0, 0.3);
 /// assert_eq!(0.1.mm() * 3, 0.3.mm());
 /// ```
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Default)]
 pub struct Size(
    pub(crate) f64
 );
@@ -97,7 +97,13 @@ impl Size {
 
 impl Display for Size {
    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-      f.write_fmt(format_args!("{}mm", self.0))
+      write!(f, "{:.2}mm", self.0)
+   }
+}
+
+impl Debug for Size {
+   fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+      Display::fmt(self, f)
    }
 }
 
@@ -302,7 +308,7 @@ mod tests {
    fn display() {
       assert_eq!(
          format!("{}", Size(42.0)),
-         "42mm".to_string()
+         "42.00mm".to_string()
       );
    }
 

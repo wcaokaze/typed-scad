@@ -5,7 +5,7 @@ use crate::geometry::Size;
 use crate::math::rough_fp::{rough_partial_cmp, rough_partial_eq};
 use crate::math::unit::{Exp, Unit};
 use std::cmp::Ordering;
-use std::fmt::{self, Display, Formatter};
+use std::fmt::{self, Debug, Display, Formatter};
 use std::ops::{
    Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign
 };
@@ -50,7 +50,7 @@ use std::ops::{
 /// # use typed_scad::geometry::AngleLiteral;
 /// assert_ne!(0.deg(), 360.deg());
 /// ```
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Default)]
 pub struct Angle(
    pub(crate) f64
 );
@@ -172,7 +172,13 @@ impl Angle {
 
 impl Display for Angle {
    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-      f.write_fmt(format_args!("{}°", self.0.to_degrees()))
+      write!(f, "{:.2}°", self.0.to_degrees())
+   }
+}
+
+impl Debug for Angle {
+   fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+      Display::fmt(self, f)
    }
 }
 
@@ -339,7 +345,7 @@ mod tests {
    fn display() {
       assert_eq!(
          format!("{}", Angle(PI)),
-         "180°".to_string()
+         "180.00°".to_string()
       );
    }
 
