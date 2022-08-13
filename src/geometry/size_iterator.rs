@@ -89,6 +89,7 @@ impl SizeIteratorBuilder<RangeFrom<Size>> {
 }
 
 /// An [Iterator] for [Size].
+#[derive(Clone)]
 pub struct SizeIterator {
    next_left: Size,
    next_left_index: isize,
@@ -98,6 +99,7 @@ pub struct SizeIterator {
    len: usize
 }
 
+#[derive(Clone)]
 pub struct SizeParallelIterator {
    start: Size,
    step: Size,
@@ -105,6 +107,7 @@ pub struct SizeParallelIterator {
 }
 
 /// An [Iterator] for [Size].
+#[derive(Clone)]
 pub struct SizeIteratorInfinite {
    next: Size,
    step: Size

@@ -89,6 +89,7 @@ impl AngleIteratorBuilder<RangeFrom<Angle>> {
 }
 
 /// An [Iterator] for [Angle].
+#[derive(Clone)]
 pub struct AngleIterator {
    next_left: Angle,
    next_left_index: isize,
@@ -98,6 +99,7 @@ pub struct AngleIterator {
    len: usize
 }
 
+#[derive(Clone)]
 pub struct AngleParallelIterator {
    start: Angle,
    step: Angle,
@@ -105,6 +107,7 @@ pub struct AngleParallelIterator {
 }
 
 /// An [Iterator] for [Angle].
+#[derive(Clone)]
 pub struct AngleIteratorInfinite {
    next: Angle,
    step: Angle
