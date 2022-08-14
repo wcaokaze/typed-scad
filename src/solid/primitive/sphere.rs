@@ -127,12 +127,9 @@ fn reverse(facet: &mut Facet) {
 }
 
 fn locate(facet: &mut Facet, location: &Location) {
-   let [[x], [y], [z]] = location.point().matrix.0;
-
+   let offset = Vector::between(&Point::ORIGIN, &location.point());
    for v in &mut facet.vertexes {
-      v.matrix.0[0][0] += x;
-      v.matrix.0[1][0] += y;
-      v.matrix.0[2][0] += z;
+      v.translate(&offset);
    }
 }
 

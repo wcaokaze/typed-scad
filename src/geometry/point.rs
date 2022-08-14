@@ -57,6 +57,10 @@ impl Transform for Point {
       }
    }
 
+   fn translate(&mut self, offset: &Vector) {
+      self.matrix += offset.matrix;
+   }
+
    fn rotated(&self, axis: &Line, angle: Angle) -> Point {
       let rotation_origin = axis.point;
 
