@@ -1,7 +1,7 @@
 use crate::math::unit::Unit;
 use std::iter::Sum;
 use std::mem::{ManuallyDrop, MaybeUninit};
-use std::ops::{Add, AddAssign, Div, Mul, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Matrix<U: Unit, const M: usize, const N: usize>(pub [[U; N]; M]);
@@ -180,6 +180,18 @@ macro_rules! mul_num {
             rhs * self
          }
       }
+
+      impl<U: Unit, const M: usize, const N: usize> MulAssign<$t> for Matrix<U, M, N>
+         where U: MulAssign<$t>
+      {
+         fn mul_assign(&mut self, rhs: $t) {
+            for column in &mut self.0 {
+               for value in column {
+                  *value *= rhs;
+               }
+            }
+         }
+      }
    )+)
 }
 
@@ -198,6 +210,20 @@ impl<U: Unit, const M: usize, const N: usize, Rhs> Div<Rhs> for Matrix<U, M, N>
          );
 
       Matrix(a)
+   }
+}
+
+impl<U: Unit, const M: usize, const N: usize, Rhs>
+   DivAssign<Rhs> for Matrix<U, M, N>
+   where U: DivAssign<Rhs>,
+         Rhs: Copy
+{
+   fn div_assign(&mut self, rhs: Rhs) {
+      for column in &mut self.0 {
+         for value in column {
+            *value /= rhs;
+         }
+      }
    }
 }
 
