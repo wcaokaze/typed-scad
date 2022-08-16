@@ -1,9 +1,10 @@
 use crate::geometry::{Angle, Line, Size, Vector};
 use crate::math::Matrix;
 use crate::transform::Transform;
+use std::fmt::{self, Debug, Display, Formatter};
 
 /// 3D Point.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 pub struct Point {
    pub matrix: Matrix<Size, 3, 1>
 }
@@ -37,11 +38,27 @@ impl Point {
    }
 }
 
+impl Display for Point {
+   fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+      write!(f, "({}, {}, {})", self.x(), self.y(), self.z())
+   }
+}
+
+impl Debug for Point {
+   fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+      write!(f, "Point{}", self)
+   }
+}
+
 impl Transform for Point {
    fn translated(&self, offset: &Vector) -> Point {
       Point {
          matrix: self.matrix + offset.matrix
       }
+   }
+
+   fn translate(&mut self, offset: &Vector) {
+      self.matrix += offset.matrix;
    }
 
    fn rotated(&self, axis: &Line, angle: Angle) -> Point {

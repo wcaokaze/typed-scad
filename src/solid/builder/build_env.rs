@@ -3,6 +3,7 @@ use std::cell::{RefCell, UnsafeCell};
 use std::collections::HashMap;
 use std::mem;
 use std::ops::Deref;
+use once_cell::sync::Lazy;
 
 thread_local! {
    static NEXT_ID: RefCell<u32> = RefCell::new(0);
@@ -11,8 +12,8 @@ thread_local! {
       = UnsafeCell::new(HashMap::new());
 }
 
-pub fn env<T: 'static>(
-   env: &BuildEnv<T>,
+pub fn env<T: 'static, D: Fn() -> T>(
+   env: &BuildEnv<T, D>,
    value: T,
    build_action: impl FnOnce() -> ()
 ) {
@@ -22,25 +23,27 @@ pub fn env<T: 'static>(
    *cell_inner_mut = old_value;
 }
 
-pub struct BuildEnv<T: 'static> {
-   id: u32,
-   default: Box<dyn Fn() -> T>
+pub struct BuildEnv<T: 'static, D: Fn() -> T = fn() -> T> {
+   id: Lazy<u32>,
+   default: D
 }
 
-impl<T: 'static> BuildEnv<T> {
-   pub fn new(default: impl Fn() -> T + 'static) -> BuildEnv<T> {
+impl<T: 'static, D: Fn() -> T> BuildEnv<T, D> {
+   pub const fn new(default: D) -> BuildEnv<T, D> {
       BuildEnv {
-         id: NEXT_ID.with(|cell|
-            cell.replace_with(|i| *i + 1)
+         id: Lazy::new(||
+            NEXT_ID.with(|cell|
+               cell.replace_with(|i| *i + 1)
+            )
          ),
-         default: Box::new(default)
+         default
       }
    }
 
    fn cell_inner_mut(&self) -> &mut Box<dyn Any> {
       ENV_MAP.with(|m| {
          let map = unsafe { &mut *m.get() };
-         let cell = map.entry(self.id).or_insert_with(|| {
+         let cell = map.entry(*self.id).or_insert_with(|| {
             let default = (self.default)();
             RefCell::new(Box::new(default))
          });
@@ -55,7 +58,7 @@ impl<T: 'static> BuildEnv<T> {
    }
 }
 
-impl<T: 'static> Deref for BuildEnv<T> {
+impl<T: 'static, D: Fn() -> T> Deref for BuildEnv<T, D> {
    type Target = T;
    fn deref(&self) -> &T {
       let r = self.cell_inner_mut();
@@ -73,9 +76,9 @@ mod tests {
       let b = BuildEnv::<()>::new(|| ());
       let c = BuildEnv::<()>::new(|| ());
 
-      assert_eq!(a.id, 0);
-      assert_eq!(b.id, 1);
-      assert_eq!(c.id, 2);
+      assert_eq!(*a.id, 0);
+      assert_eq!(*b.id, 1);
+      assert_eq!(*c.id, 2);
    }
 
    #[test]

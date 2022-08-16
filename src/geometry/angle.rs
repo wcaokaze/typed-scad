@@ -1,8 +1,11 @@
-use crate::geometry::{IterableAngleRange, Size};
+use crate::geometry::angle_iterator::{
+   AngleIteratorBuilder, AngleParallelIteratorBuilder
+};
+use crate::geometry::Size;
 use crate::math::rough_fp::{rough_partial_cmp, rough_partial_eq};
 use crate::math::unit::{Exp, Unit};
 use std::cmp::Ordering;
-use std::fmt::{self, Display, Formatter};
+use std::fmt::{self, Debug, Display, Formatter};
 use std::ops::{
    Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign
 };
@@ -47,8 +50,10 @@ use std::ops::{
 /// # use typed_scad::geometry::AngleLiteral;
 /// assert_ne!(0.deg(), 360.deg());
 /// ```
-#[derive(Clone, Copy, Debug, Default)]
-pub struct Angle(f64);
+#[derive(Clone, Copy, Default)]
+pub struct Angle(
+   pub(crate) f64
+);
 
 pub fn sin(angle: Angle) -> f64 {
    angle.sin()
@@ -138,28 +143,42 @@ impl Angle {
    }
 
    /// Prepare to iterate [Angle]s in the specified range.
-   /// And [step][IterableAngleRange::step] returns an [Iterator] for Angle.
+   /// And [step][AngleIteratorBuilder::step] returns an [Iterator] for Angle.
    ///
    /// ```
-   /// # use typed_scad::geometry::{Angle, AngleLiteral, IterableAngleRange};
+   /// # use typed_scad::geometry::{Angle, AngleLiteral};
    /// let iter = Angle::iterate(0.deg()..=3.deg()).step(1.deg());
    /// assert_eq!(iter.collect::<Vec<_>>(), vec![0.deg(), 1.deg(), 2.deg(), 3.deg()]);
    /// ```
    ///
    /// Negative steps are also available.
    /// ```
-   /// # use typed_scad::geometry::{Angle, AngleLiteral, IterableAngleRange};
+   /// # use typed_scad::geometry::{Angle, AngleLiteral};
    /// let iter = Angle::iterate(3.deg()..=0.deg()).step(-1.deg());
    /// assert_eq!(iter.collect::<Vec<_>>(), vec![3.deg(), 2.deg(), 1.deg(), 0.deg()]);
    /// ```
-   pub fn iterate<R>(angle_range: R) -> R where R: IterableAngleRange {
-      angle_range
+   pub fn iterate<R>(angle_range: R) -> AngleIteratorBuilder<R> {
+      AngleIteratorBuilder(angle_range)
+   }
+
+   /// similar to [iterate], but par_iterate returns a [Rayon] ParallelIterator.
+   ///
+   /// [iterate]: Angle::iterate
+   /// [Rayon]: https://docs.rs/rayon/latest/rayon/
+   pub fn par_iterate<R>(angle_range: R) -> AngleParallelIteratorBuilder<R> {
+      AngleParallelIteratorBuilder(angle_range)
    }
 }
 
 impl Display for Angle {
    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-      f.write_fmt(format_args!("{}°", self.0.to_degrees()))
+      write!(f, "{:.2}°", self.0.to_degrees())
+   }
+}
+
+impl Debug for Angle {
+   fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+      Display::fmt(self, f)
    }
 }
 
@@ -326,7 +345,7 @@ mod tests {
    fn display() {
       assert_eq!(
          format!("{}", Angle(PI)),
-         "180°".to_string()
+         "180.00°".to_string()
       );
    }
 

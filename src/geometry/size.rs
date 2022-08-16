@@ -1,8 +1,10 @@
-use crate::geometry::IterableSizeRange;
+use crate::geometry::size_iterator::{
+   SizeIteratorBuilder, SizeParallelIteratorBuilder
+};
 use crate::math::rough_fp::{rough_partial_cmp, rough_partial_eq};
 use crate::math::unit::{Exp, Unit};
 use std::cmp::Ordering;
-use std::fmt::{self, Display, Formatter};
+use std::fmt::{self, Debug, Display, Formatter};
 use std::iter::Sum;
 use std::ops::{
    Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign
@@ -34,7 +36,7 @@ use std::ops::{
 /// assert_ne!(0.1 * 3.0, 0.3);
 /// assert_eq!(0.1.mm() * 3, 0.3.mm());
 /// ```
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Default)]
 pub struct Size(
    pub(crate) f64
 );
@@ -58,22 +60,30 @@ impl Size {
    }
 
    /// Prepare to iterate [Size]s in the specified range.
-   /// And [step](IterableSizeRange::step) returns an [Iterator] for Size.
+   /// And [step](SizeIteratorBuilder::step) returns an [Iterator] for Size.
    ///
    /// ```
-   /// # use typed_scad::geometry::{IterableSizeRange, Size, SizeLiteral};
+   /// # use typed_scad::geometry::{Size, SizeLiteral};
    /// let iter = Size::iterate(0.mm()..=3.mm()).step(1.mm());
    /// assert_eq!(iter.collect::<Vec<_>>(), vec![0.mm(), 1.mm(), 2.mm(), 3.mm()]);
    /// ```
    ///
    /// Negative steps are also available.
    /// ```
-   /// # use typed_scad::geometry::{IterableSizeRange, Size, SizeLiteral};
+   /// # use typed_scad::geometry::{Size, SizeLiteral};
    /// let iter = Size::iterate(3.mm()..=0.mm()).step(-1.mm());
    /// assert_eq!(iter.collect::<Vec<_>>(), vec![3.mm(), 2.mm(), 1.mm(), 0.mm()]);
    /// ```
-   pub fn iterate<R>(size_range: R) -> R where R: IterableSizeRange {
-      size_range
+   pub fn iterate<R>(size_range: R) -> SizeIteratorBuilder<R> {
+      SizeIteratorBuilder(size_range)
+   }
+
+   /// similar to [iterate], but par_iterate returns a [Rayon] ParallelIterator.
+   ///
+   /// [iterate]: Size::iterate
+   /// [Rayon]: https://docs.rs/rayon/latest/rayon/
+   pub fn par_iterate<R>(size_range: R) -> SizeParallelIteratorBuilder<R> {
+      SizeParallelIteratorBuilder(size_range)
    }
 
    pub fn abs(self) -> Size {
@@ -87,7 +97,13 @@ impl Size {
 
 impl Display for Size {
    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-      f.write_fmt(format_args!("{}mm", self.0))
+      write!(f, "{:.2}mm", self.0)
+   }
+}
+
+impl Debug for Size {
+   fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+      Display::fmt(self, f)
    }
 }
 
@@ -292,7 +308,7 @@ mod tests {
    fn display() {
       assert_eq!(
          format!("{}", Size(42.0)),
-         "42mm".to_string()
+         "42.00mm".to_string()
       );
    }
 

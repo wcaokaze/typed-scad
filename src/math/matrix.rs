@@ -1,7 +1,7 @@
 use crate::math::unit::Unit;
 use std::iter::Sum;
 use std::mem::{ManuallyDrop, MaybeUninit};
-use std::ops::{Add, Div, Mul, Sub};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Matrix<U: Unit, const M: usize, const N: usize>(pub [[U; N]; M]);
@@ -69,12 +69,13 @@ impl<U: Unit, const M: usize, const N: usize> Default for Matrix<U, M, N>
    }
 }
 
-impl<U: Unit, const M: usize, const N: usize> Add for Matrix<U, M, N>
-   where U: Add,
+impl<U: Unit, Rhs: Unit, const M: usize, const N: usize>
+   Add<Matrix<Rhs, M, N>> for Matrix<U, M, N>
+   where U: Add<Rhs>,
          U::Output: Unit
 {
    type Output = Matrix<U::Output, M, N>;
-   fn add(self, rhs: Self) -> Self::Output {
+   fn add(self, rhs: Matrix<Rhs, M, N>) -> Self::Output {
       let a = self.0.zip(rhs.0)
          .map(|(ma, mb)| {
             ma.zip(mb)
@@ -85,12 +86,30 @@ impl<U: Unit, const M: usize, const N: usize> Add for Matrix<U, M, N>
    }
 }
 
-impl<U: Unit, const M: usize, const N: usize> Sub for Matrix<U, M, N>
-   where U: Sub,
+impl<U: Unit, Rhs: Unit, const M: usize, const N: usize>
+   AddAssign<Matrix<Rhs, M, N>> for Matrix<U, M, N>
+   where U: AddAssign<Rhs>
+{
+   fn add_assign(&mut self, rhs: Matrix<Rhs, M, N>) {
+      let mut x = 0;
+      for r_column in rhs.0 {
+         let mut y = 0;
+         for r_value in r_column {
+            self.0[x][y] += r_value;
+            y += 1;
+         }
+         x += 1;
+      }
+   }
+}
+
+impl<U: Unit, Rhs: Unit, const M: usize, const N: usize>
+   Sub<Matrix<Rhs, M, N>> for Matrix<U, M, N>
+   where U: Sub<Rhs>,
          U::Output: Unit
 {
    type Output = Matrix<U::Output, M, N>;
-   fn sub(self, rhs: Self) -> Self::Output {
+   fn sub(self, rhs: Matrix<Rhs, M, N>) -> Self::Output {
       let a = self.0.zip(rhs.0)
          .map(|(ma, mb)| {
             ma.zip(mb)
@@ -98,6 +117,23 @@ impl<U: Unit, const M: usize, const N: usize> Sub for Matrix<U, M, N>
          });
 
       Matrix(a)
+   }
+}
+
+impl<U: Unit, Rhs: Unit, const M: usize, const N: usize>
+   SubAssign<Matrix<Rhs, M, N>> for Matrix<U, M, N>
+   where U: SubAssign<Rhs>
+{
+   fn sub_assign(&mut self, rhs: Matrix<Rhs, M, N>) {
+      let mut x = 0;
+      for r_column in rhs.0 {
+         let mut y = 0;
+         for r_value in r_column {
+            self.0[x][y] -= r_value;
+            y += 1;
+         }
+         x += 1;
+      }
    }
 }
 
@@ -144,6 +180,18 @@ macro_rules! mul_num {
             rhs * self
          }
       }
+
+      impl<U: Unit, const M: usize, const N: usize> MulAssign<$t> for Matrix<U, M, N>
+         where U: MulAssign<$t>
+      {
+         fn mul_assign(&mut self, rhs: $t) {
+            for column in &mut self.0 {
+               for value in column {
+                  *value *= rhs;
+               }
+            }
+         }
+      }
    )+)
 }
 
@@ -162,6 +210,20 @@ impl<U: Unit, const M: usize, const N: usize, Rhs> Div<Rhs> for Matrix<U, M, N>
          );
 
       Matrix(a)
+   }
+}
+
+impl<U: Unit, const M: usize, const N: usize, Rhs>
+   DivAssign<Rhs> for Matrix<U, M, N>
+   where U: DivAssign<Rhs>,
+         Rhs: Copy
+{
+   fn div_assign(&mut self, rhs: Rhs) {
+      for column in &mut self.0 {
+         for value in column {
+            *value /= rhs;
+         }
+      }
    }
 }
 
