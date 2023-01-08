@@ -80,31 +80,10 @@ impl Transform for Plane {
    }
 }
 
-impl Intersection<&Plane> for &Plane {
-   type Output = Line;
-   fn intersection(self, rhs: &Plane) -> Line {
-      self.intersection(*rhs)
-   }
-}
-
-impl Intersection<&Plane> for Plane {
-   type Output = Line;
-   fn intersection(self, rhs: &Plane) -> Line {
-      self.intersection(*rhs)
-   }
-}
-
-impl Intersection<Plane> for &Plane {
-   type Output = Line;
-   fn intersection(self, rhs: Plane) -> Line {
-      (*self).intersection(rhs)
-   }
-}
-
 impl Intersection<Plane> for Plane {
    type Output = Line;
 
-   fn intersection(self, rhs: Plane) -> Line {
+   fn intersection(&self, rhs: &Plane) -> Line {
       let sp = self.point;
       let sv = self.normal_vector;
       let rp = rhs.point;
@@ -140,31 +119,10 @@ impl Intersection<Plane> for Plane {
    }
 }
 
-impl Intersection<&Line> for &Plane {
-   type Output = Point;
-   fn intersection(self, rhs: &Line) -> Point {
-      self.intersection(*rhs)
-   }
-}
-
-impl Intersection<&Line> for Plane {
-   type Output = Point;
-   fn intersection(self, rhs: &Line) -> Point {
-      self.intersection(*rhs)
-   }
-}
-
-impl Intersection<Line> for &Plane {
-   type Output = Point;
-   fn intersection(self, rhs: Line) -> Point {
-      (*self).intersection(rhs)
-   }
-}
-
 impl Intersection<Line> for Plane {
    type Output = Point;
 
-   fn intersection(self, rhs: Line) -> Point {
+   fn intersection(&self, rhs: &Line) -> Point {
       let inner_product: Exp<Size, 2>
          = self.normal_vector.inner_product(&rhs.vector);
 
@@ -234,17 +192,17 @@ mod tests {
    #[test]
    fn intersection_plane() {
       assert_eq!(
-         Plane::XY.intersection(Plane::YZ),
+         Plane::XY.intersection(&Plane::YZ),
          Line::Y_AXIS
       );
 
       assert_eq!(
-         Plane::YZ.intersection(Plane::ZX),
+         Plane::YZ.intersection(&Plane::ZX),
          Line::Z_AXIS
       );
 
       assert_eq!(
-         Plane::ZX.intersection(Plane::XY),
+         Plane::ZX.intersection(&Plane::XY),
          Line::X_AXIS
       );
 
@@ -258,7 +216,7 @@ mod tests {
          &Vector::new(-1.mm(), 1.mm(), 0.mm())
       );
 
-      let actual = z_3mm_plane.intersection(xy_45deg_plane);
+      let actual = z_3mm_plane.intersection(&xy_45deg_plane);
       let expected = Line::new(
          &Point::new(1.mm(), 0.mm(), 3.mm()),
          &Vector::new(1.mm(), 1.mm(), 0.mm())
@@ -269,7 +227,7 @@ mod tests {
    #[test]
    #[should_panic]
    fn intersection_same_planes() {
-      Plane::XY.intersection(Plane::XY);
+      Plane::XY.intersection(&Plane::XY);
    }
 
    #[test]
@@ -277,13 +235,13 @@ mod tests {
    fn intersection_same_direction() {
       let a = Plane::new(&Point::new(1.mm(), 2.mm(), 3.mm()), &Vector::X_UNIT_VECTOR);
       let b = Plane::new(&Point::new(4.mm(), 5.mm(), 6.mm()), &Vector::X_UNIT_VECTOR);
-      a.intersection(b);
+      a.intersection(&b);
    }
 
    #[test]
    fn intersection_line() {
       assert_eq!(
-         Plane::XY.intersection(Line::Z_AXIS),
+         Plane::XY.intersection(&Line::Z_AXIS),
          Point::ORIGIN
       );
 
@@ -293,7 +251,7 @@ mod tests {
       );
 
       assert_eq!(
-         Plane::YZ.intersection(line),
+         Plane::YZ.intersection(&line),
          Point::new(0.mm(), -1.mm(), 1.mm())
       );
    }
@@ -301,7 +259,7 @@ mod tests {
    #[test]
    #[should_panic]
    fn intersection_line_on_plane() {
-      Plane::XY.intersection(Line::X_AXIS);
+      Plane::XY.intersection(&Line::X_AXIS);
    }
 
    #[test]
@@ -312,6 +270,6 @@ mod tests {
          &Vector::X_UNIT_VECTOR
       );
 
-      Plane::XY.intersection(line);
+      Plane::XY.intersection(&line);
    }
 }

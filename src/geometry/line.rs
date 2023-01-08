@@ -76,30 +76,9 @@ impl Transform for Line {
    }
 }
 
-impl Intersection<&Plane> for &Line {
-   type Output = Point;
-   fn intersection(self, rhs: &Plane) -> Point {
-      rhs.intersection(self)
-   }
-}
-
-impl Intersection<&Plane> for Line {
-   type Output = Point;
-   fn intersection(self, rhs: &Plane) -> Point {
-      rhs.intersection(self)
-   }
-}
-
-impl Intersection<Plane> for &Line {
-   type Output = Point;
-   fn intersection(self, rhs: Plane) -> Point {
-      rhs.intersection(self)
-   }
-}
-
 impl Intersection<Plane> for Line {
    type Output = Point;
-   fn intersection(self, rhs: Plane) -> Point {
+   fn intersection(&self, rhs: &Plane) -> Point {
       rhs.intersection(self)
    }
 }
