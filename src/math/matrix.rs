@@ -2,6 +2,7 @@ use crate::math::unit::Unit;
 use std::iter::Sum;
 use std::mem::{ManuallyDrop, MaybeUninit};
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
+use noisy_float::prelude::*;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Matrix<U: Unit, const M: usize, const N: usize>(pub [[U; N]; M]);
@@ -195,7 +196,8 @@ macro_rules! mul_num {
    )+)
 }
 
-mul_num!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64);
+mul_num!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64,
+   N32, N64, R32, R64);
 
 impl<U: Unit, const M: usize, const N: usize, Rhs> Div<Rhs> for Matrix<U, M, N>
    where U: Div<Rhs>,
@@ -254,6 +256,7 @@ mod tests {
    use super::Matrix;
    use crate::geometry::{Size, SizeLiteral};
    use crate::math::unit::Exp;
+   use noisy_float::prelude::*;
 
    #[test]
    fn default() {
@@ -435,10 +438,10 @@ mod tests {
 
       let expected = unsafe {
          Matrix([
-            [Exp::<Size, 2>::new( 9.0), Exp::<Size, 2>::new(12.0), Exp::<Size, 2>::new(15.0)],
-            [Exp::<Size, 2>::new(19.0), Exp::<Size, 2>::new(26.0), Exp::<Size, 2>::new(33.0)],
-            [Exp::<Size, 2>::new(29.0), Exp::<Size, 2>::new(40.0), Exp::<Size, 2>::new(51.0)],
-            [Exp::<Size, 2>::new(39.0), Exp::<Size, 2>::new(54.0), Exp::<Size, 2>::new(69.0)]
+            [Exp::<Size, 2>::new(n64( 9.0)), Exp::<Size, 2>::new(n64(12.0)), Exp::<Size, 2>::new(n64(15.0))],
+            [Exp::<Size, 2>::new(n64(19.0)), Exp::<Size, 2>::new(n64(26.0)), Exp::<Size, 2>::new(n64(33.0))],
+            [Exp::<Size, 2>::new(n64(29.0)), Exp::<Size, 2>::new(n64(40.0)), Exp::<Size, 2>::new(n64(51.0))],
+            [Exp::<Size, 2>::new(n64(39.0)), Exp::<Size, 2>::new(n64(54.0)), Exp::<Size, 2>::new(n64(69.0))]
          ])
       };
 

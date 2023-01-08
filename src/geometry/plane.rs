@@ -1,8 +1,9 @@
 use crate::geometry::{Angle, Line, Point, Size, Vector};
 use crate::geometry::operators::Intersection;
-use crate::math::rough_fp::rough_partial_eq;
+use crate::math::rough_fp::rough_eq;
 use crate::math::unit::Exp;
 use crate::transform::Transform;
+use noisy_float::prelude::*;
 
 /// Plane in 3D.
 ///
@@ -167,11 +168,11 @@ impl Intersection<Line> for Plane {
       let inner_product: Exp<Size, 2>
          = self.normal_vector.inner_product(&rhs.vector);
 
-      if rough_partial_eq(inner_product.0, 0.0) {
+      if rough_eq(inner_product.0, n64(0.0)) {
          panic!("The specified plane and line don't have an intersection.");
       }
 
-      let t = f64::from(
+      let t = N64::from(
          Vector::between(&rhs.point, &self.point)
             .inner_product(&self.normal_vector) / inner_product
       );

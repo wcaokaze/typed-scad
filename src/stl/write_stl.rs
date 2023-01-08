@@ -62,7 +62,7 @@ fn write_point(output: &mut dyn Write, point: &Point) -> Result<()> {
 }
 
 fn write_size(output: &mut dyn Write, size: Size) -> Result<()> {
-   let f = size.0 as f32;
+   let f = size.0.raw() as f32;
    output.write(&f.to_le_bytes())?;
    Ok(())
 }
@@ -71,7 +71,8 @@ fn write_size(output: &mut dyn Write, size: Size) -> Result<()> {
 mod tests {
    use super::write_stl;
    use crate::geometry::{Point, Size};
-   use crate::math::rough_fp::rough_partial_eq;
+   use crate::math::conversion::ToN64;
+   use crate::math::rough_fp::rough_eq;
    use crate::stl::stl_solid::{Facet, StlSolid};
 
    macro_rules! solid {
@@ -87,7 +88,7 @@ mod tests {
    }
 
    fn vertex(x: i32, y: i32, z: i32) -> Point {
-      Point::new(Size(x as f64), Size(y as f64), Size(z as f64))
+      Point::new(Size::from(x), Size::from(y), Size::from(z))
    }
 
    #[test]
@@ -146,24 +147,24 @@ mod tests {
          let facet_start = header_bytes + facet_count_bytes + facet_bytes * i;
 
          let normal_vector = solid.facets[i].normal_vector();
-         assert_rough_eq(f32_at(&output, facet_start +  0), normal_vector.x().0 as f32);
-         assert_rough_eq(f32_at(&output, facet_start +  4), normal_vector.y().0 as f32);
-         assert_rough_eq(f32_at(&output, facet_start +  8), normal_vector.z().0 as f32);
+         assert_rough_eq(f32_at(&output, facet_start +  0), normal_vector.x().0.raw() as f32);
+         assert_rough_eq(f32_at(&output, facet_start +  4), normal_vector.y().0.raw() as f32);
+         assert_rough_eq(f32_at(&output, facet_start +  8), normal_vector.z().0.raw() as f32);
 
          let vertex1 = solid.facets[i].vertexes[0];
-         assert_rough_eq(f32_at(&output, facet_start + 12), vertex1.x().0 as f32);
-         assert_rough_eq(f32_at(&output, facet_start + 16), vertex1.y().0 as f32);
-         assert_rough_eq(f32_at(&output, facet_start + 20), vertex1.z().0 as f32);
+         assert_rough_eq(f32_at(&output, facet_start + 12), vertex1.x().0.raw() as f32);
+         assert_rough_eq(f32_at(&output, facet_start + 16), vertex1.y().0.raw() as f32);
+         assert_rough_eq(f32_at(&output, facet_start + 20), vertex1.z().0.raw() as f32);
 
          let vertex2 = solid.facets[i].vertexes[1];
-         assert_rough_eq(f32_at(&output, facet_start + 24), vertex2.x().0 as f32);
-         assert_rough_eq(f32_at(&output, facet_start + 28), vertex2.y().0 as f32);
-         assert_rough_eq(f32_at(&output, facet_start + 32), vertex2.z().0 as f32);
+         assert_rough_eq(f32_at(&output, facet_start + 24), vertex2.x().0.raw() as f32);
+         assert_rough_eq(f32_at(&output, facet_start + 28), vertex2.y().0.raw() as f32);
+         assert_rough_eq(f32_at(&output, facet_start + 32), vertex2.z().0.raw() as f32);
 
          let vertex3 = solid.facets[i].vertexes[2];
-         assert_rough_eq(f32_at(&output, facet_start + 36), vertex3.x().0 as f32);
-         assert_rough_eq(f32_at(&output, facet_start + 40), vertex3.y().0 as f32);
-         assert_rough_eq(f32_at(&output, facet_start + 44), vertex3.z().0 as f32);
+         assert_rough_eq(f32_at(&output, facet_start + 36), vertex3.x().0.raw() as f32);
+         assert_rough_eq(f32_at(&output, facet_start + 40), vertex3.y().0.raw() as f32);
+         assert_rough_eq(f32_at(&output, facet_start + 44), vertex3.z().0.raw() as f32);
       }
    }
 
@@ -177,7 +178,7 @@ mod tests {
 
    fn assert_rough_eq(a: f32, b: f32) {
       assert!(
-         rough_partial_eq(a as f64, b as f64),
+         rough_eq(a.to_n64(), b.to_n64()),
          "left: {a}, right: {b}"
       );
    }

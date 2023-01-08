@@ -1,6 +1,8 @@
 use crate::geometry::{Angle, Size, SizeLiteral, Point, sin, acos, cos};
 use crate::math::Matrix;
+use crate::math::conversion::ToN64;
 use crate::math::unit::Exp;
+use noisy_float::prelude::*;
 use std::fmt::{self, Debug, Display, Formatter};
 use std::iter::Sum;
 use std::ops::{
@@ -16,11 +18,20 @@ pub struct Vector {
 impl Vector {
    pub const ZERO: Vector = Vector::new(Size::ZERO, Size::ZERO, Size::ZERO);
    pub const X_UNIT_VECTOR: Vector = Vector::new(
-      Size::millimeter(1.0), Size::millimeter(0.0), Size::millimeter(0.0));
+      Size::millimeter(N64::unchecked_new(1.0)),
+      Size::ZERO,
+      Size::ZERO
+   );
    pub const Y_UNIT_VECTOR: Vector = Vector::new(
-      Size::millimeter(0.0), Size::millimeter(1.0), Size::millimeter(0.0));
+      Size::ZERO,
+      Size::millimeter(N64::unchecked_new(1.0)),
+      Size::ZERO
+   );
    pub const Z_UNIT_VECTOR: Vector = Vector::new(
-      Size::millimeter(0.0), Size::millimeter(0.0), Size::millimeter(1.0));
+      Size::ZERO,
+      Size::ZERO,
+      Size::millimeter(N64::unchecked_new(1.0)),
+   );
 
    pub const fn new(x: Size, y: Size, z: Size) -> Vector {
       Vector {
@@ -102,7 +113,7 @@ impl Vector {
 
       Vector {
          matrix: self.matrix * cos(angle)
-            + (1.0 - cos(angle)) * axis_vector
+            + (n64(1.0) - cos(angle)) * axis_vector
             + axis_unit_vector.vector_product(&self).matrix * sin(angle)
       }
    }
@@ -156,7 +167,7 @@ macro_rules! mul {
          type Output = Vector;
          fn mul(self, rhs: $t) -> Vector {
             Vector {
-               matrix: self.matrix * rhs as f64
+               matrix: self.matrix * rhs.to_n64()
             }
          }
       }
@@ -176,7 +187,8 @@ macro_rules! mul {
    )+)
 }
 
-mul!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64);
+mul!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64,
+   N32, N64, R32, R64);
 
 macro_rules! div {
    ($($t:ty),+) => ($(
@@ -184,7 +196,7 @@ macro_rules! div {
          type Output = Vector;
          fn div(self, rhs: $t) -> Vector {
             Vector {
-               matrix: self.matrix / rhs as f64
+               matrix: self.matrix / rhs.to_n64()
             }
          }
       }
@@ -197,7 +209,8 @@ macro_rules! div {
    )+)
 }
 
-div!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64);
+div!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64,
+   N32, N64, R32, R64);
 
 impl Neg for Vector {
    type Output = Vector;

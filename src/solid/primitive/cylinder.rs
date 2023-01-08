@@ -103,9 +103,10 @@ mod tests {
    use crate::solid::{cylinder, Location, Solid};
    use crate::solid::builder::env;
    use crate::solid::precision::FRAGMENT_MINIMUM_ANGLE;
+   use noisy_float::prelude::*;
 
    fn fragment_count() -> usize {
-      (360.deg() / *FRAGMENT_MINIMUM_ANGLE).ceil() as usize
+      (360.deg() / *FRAGMENT_MINIMUM_ANGLE).ceil().raw() as usize
    }
 
    #[test]

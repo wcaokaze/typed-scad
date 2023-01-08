@@ -1,8 +1,10 @@
 use crate::geometry::size_iterator::{
    SizeIteratorBuilder, SizeParallelIteratorBuilder
 };
-use crate::math::rough_fp::{rough_partial_cmp, rough_partial_eq};
+use crate::math::conversion::ToN64;
+use crate::math::rough_fp::{rough_cmp, rough_eq};
 use crate::math::unit::{Exp, Unit};
+use noisy_float::prelude::*;
 use std::cmp::Ordering;
 use std::fmt::{self, Debug, Display, Formatter};
 use std::iter::Sum;
@@ -29,8 +31,7 @@ use std::ops::{
 /// ```
 ///
 /// ## Note
-/// Size implements PartialEq and PartialOrd.
-/// They allows float-point arithmetic errors.
+/// Size implements Eq and Ord. They allows float-point arithmetic errors.
 /// ```
 /// # use typed_scad::geometry::SizeLiteral;
 /// assert_ne!(0.1 * 3.0, 0.3);
@@ -38,20 +39,20 @@ use std::ops::{
 /// ```
 #[derive(Clone, Copy, Default)]
 pub struct Size(
-   pub(crate) f64
+   pub(crate) N64
 );
 
 impl Size {
-   pub const ZERO: Size = Size(0.0);
-   pub const HAIRLINE: Size = Size(1e-8);
-   pub const INFINITY: Size = Size(f64::INFINITY);
+   pub const ZERO: Size = Size(N64::unchecked_new(0.0));
+   pub const HAIRLINE: Size = Size(N64::unchecked_new(1e-8));
+   pub const INFINITY: Size = Size(N64::unchecked_new(f64::INFINITY));
 
-   pub const fn millimeter(millimeter: f64) -> Size {
+   pub const fn millimeter(millimeter: N64) -> Size {
       Size(millimeter)
    }
 
-   /// Converts this size to a f64 value as millimeter
-   pub const fn to_millimeter(self) -> f64 {
+   /// Converts this size to a N64 value as millimeter
+   pub const fn to_millimeter(self) -> N64 {
       self.0
    }
 
@@ -95,6 +96,12 @@ impl Size {
    }
 }
 
+impl<T: ToN64> From<T> for Size {
+   fn from(value: T) -> Self {
+      Self(value.to_n64())
+   }
+}
+
 impl Display for Size {
    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
       write!(f, "{:.2}mm", self.0)
@@ -109,15 +116,23 @@ impl Debug for Size {
 
 impl PartialOrd for Size {
    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-      rough_partial_cmp(self.0, other.0)
+      Some(rough_cmp(self.0, other.0))
+   }
+}
+
+impl Ord for Size {
+   fn cmp(&self, other: &Self) -> Ordering {
+      rough_cmp(self.0, other.0)
    }
 }
 
 impl PartialEq for Size {
    fn eq(&self, other: &Self) -> bool {
-      rough_partial_eq(self.0, other.0)
+      rough_eq(self.0, other.0)
    }
 }
+
+impl Eq for Size {}
 
 impl Add for Size {
    type Output = Size;
@@ -150,7 +165,7 @@ macro_rules! mul {
       impl Mul<$t> for Size {
          type Output = Size;
          fn mul(self, rhs: $t) -> Size {
-            Size(self.0 * rhs as f64)
+            Size(self.0 * rhs.to_n64())
          }
       }
 
@@ -169,14 +184,15 @@ macro_rules! mul {
    )+)
 }
 
-mul!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64);
+mul!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64,
+   N32, N64, R32, R64);
 
 macro_rules! div {
    ($($t:ty),+) => ($(
       impl Div<$t> for Size {
          type Output = Size;
          fn div(self, rhs: $t) -> Size {
-            Size(self.0 / rhs as f64)
+            Size(self.0 / rhs.to_n64())
          }
       }
 
@@ -188,11 +204,12 @@ macro_rules! div {
    )+)
 }
 
-div!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64);
+div!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64,
+   N32, N64, R32, R64);
 
 impl Div for Size {
-   type Output = f64;
-   fn div(self, rhs: Size) -> f64 {
+   type Output = N64;
+   fn div(self, rhs: Size) -> N64 {
       self.0 / rhs.0
    }
 }
@@ -237,8 +254,8 @@ impl<const N: i32> Div<Size> for Exp<Size, N>
    }
 }
 
-impl From<Exp<Size, 0>> for f64 {
-   fn from(exp: Exp<Size, 0>) -> f64 {
+impl From<Exp<Size, 0>> for N64 {
+   fn from(exp: Exp<Size, 0>) -> N64 {
       exp.0
    }
 }
@@ -266,17 +283,18 @@ macro_rules! size_literal {
    ($($t:ty),+) => ($(
       impl SizeLiteral for $t {
          fn mm(self) -> Size {
-            Size(self as f64)
+            Size(self.to_n64())
          }
 
          fn cm(self) -> Size {
-            Size((self as f64) * 10.0)
+            Size((self.to_n64()) * 10.0)
          }
       }
    )+)
 }
 
-size_literal!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64);
+size_literal!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128,
+   f32, f64, N32, N64, R32, R64);
 
 impl Sum for Size {
    fn sum<I>(iter: I) -> Size where I: Iterator<Item = Size> {
@@ -291,112 +309,113 @@ impl Sum for Size {
 #[cfg(test)]
 mod tests {
    use super::{Size, SizeLiteral};
+   use noisy_float::prelude::*;
    use std::cmp::Ordering;
 
    #[test]
    fn eq() {
-      assert_eq!(Size(42.0), Size(42.0));
-      assert_ne!(Size(42.0), Size(43.0));
+      assert_eq!(Size::from(42.0), Size::from(42.0));
+      assert_ne!(Size::from(42.0), Size::from(43.0));
 
-      assert_ne!(     42.0,       42.0 + 1e-12);
-      assert_eq!(Size(42.0), Size(42.0 + 1e-12));
-      assert_ne!(     42.0,       42.0 - 1e-12);
-      assert_eq!(Size(42.0), Size(42.0 - 1e-12));
+      assert_ne!(           42.0,             42.0 + 1e-12);
+      assert_eq!(Size::from(42.0), Size::from(42.0 + 1e-12));
+      assert_ne!(           42.0,             42.0 - 1e-12);
+      assert_eq!(Size::from(42.0), Size::from(42.0 - 1e-12));
    }
 
    #[test]
    fn display() {
       assert_eq!(
-         format!("{}", Size(42.0)),
+         format!("{}", Size::from(42.0)),
          "42.00mm".to_string()
       );
    }
 
    #[test]
    fn size_literal() {
-      assert_eq!(42.mm(), Size(42.0));
-      assert_eq!(42.cm(), Size(420.0));
-      assert_eq!(42.0.mm(), Size(42.0));
-      assert_eq!(42.0.cm(), Size(420.0));
+      assert_eq!(42.mm(), Size::from(42.0));
+      assert_eq!(42.cm(), Size::from(420.0));
+      assert_eq!(42.0.mm(), Size::from(42.0));
+      assert_eq!(42.0.cm(), Size::from(420.0));
    }
 
    #[test]
    fn to_millimeter() {
-      assert_eq!(Size(42.0).to_millimeter(), 42.0);
+      assert_eq!(Size::from(42.0).to_millimeter(), n64(42.0));
    }
 
    #[test]
    fn operators() {
-      assert_eq!(Size( 42.0) + Size( 1.5), Size(43.5));
-      assert_eq!(Size( 42.0) + Size(-1.5), Size(40.5));
-      assert_eq!(Size(-42.0) + Size( 1.5), Size(-40.5));
-      assert_eq!(Size(-42.0) + Size(-1.5), Size(-43.5));
+      assert_eq!(Size::from( 42.0) + Size::from( 1.5), Size::from(43.5));
+      assert_eq!(Size::from( 42.0) + Size::from(-1.5), Size::from(40.5));
+      assert_eq!(Size::from(-42.0) + Size::from( 1.5), Size::from(-40.5));
+      assert_eq!(Size::from(-42.0) + Size::from(-1.5), Size::from(-43.5));
 
-      assert_eq!(Size( 42.0) - Size( 1.5), Size(40.5));
-      assert_eq!(Size( 42.0) - Size(-1.5), Size(43.5));
-      assert_eq!(Size(-42.0) - Size( 1.5), Size(-43.5));
-      assert_eq!(Size(-42.0) - Size(-1.5), Size(-40.5));
+      assert_eq!(Size::from( 42.0) - Size::from( 1.5), Size::from(40.5));
+      assert_eq!(Size::from( 42.0) - Size::from(-1.5), Size::from(43.5));
+      assert_eq!(Size::from(-42.0) - Size::from( 1.5), Size::from(-43.5));
+      assert_eq!(Size::from(-42.0) - Size::from(-1.5), Size::from(-40.5));
 
-      assert_eq!(Size( 42.0) *  2, Size( 84.0));
-      assert_eq!(Size( 42.0) * -2, Size(-84.0));
-      assert_eq!(Size(-42.0) *  2, Size(-84.0));
-      assert_eq!(Size(-42.0) * -2, Size( 84.0));
-      assert_eq!(Size( 42.0) *  1.5, Size( 63.0));
-      assert_eq!(Size( 42.0) * -1.5, Size(-63.0));
-      assert_eq!(Size(-42.0) *  1.5, Size(-63.0));
-      assert_eq!(Size(-42.0) * -1.5, Size( 63.0));
+      assert_eq!(Size::from( 42.0) *  2, Size::from( 84.0));
+      assert_eq!(Size::from( 42.0) * -2, Size::from(-84.0));
+      assert_eq!(Size::from(-42.0) *  2, Size::from(-84.0));
+      assert_eq!(Size::from(-42.0) * -2, Size::from( 84.0));
+      assert_eq!(Size::from( 42.0) *  1.5, Size::from( 63.0));
+      assert_eq!(Size::from( 42.0) * -1.5, Size::from(-63.0));
+      assert_eq!(Size::from(-42.0) *  1.5, Size::from(-63.0));
+      assert_eq!(Size::from(-42.0) * -1.5, Size::from( 63.0));
 
-      assert_eq!( 2 * Size( 42.0), Size( 84.0));
-      assert_eq!(-2 * Size( 42.0), Size(-84.0));
-      assert_eq!( 2 * Size(-42.0), Size(-84.0));
-      assert_eq!(-2 * Size(-42.0), Size( 84.0));
-      assert_eq!( 1.5 * Size( 42.0), Size( 63.0));
-      assert_eq!(-1.5 * Size( 42.0), Size(-63.0));
-      assert_eq!( 1.5 * Size(-42.0), Size(-63.0));
-      assert_eq!(-1.5 * Size(-42.0), Size( 63.0));
+      assert_eq!( 2 * Size::from( 42.0), Size::from( 84.0));
+      assert_eq!(-2 * Size::from( 42.0), Size::from(-84.0));
+      assert_eq!( 2 * Size::from(-42.0), Size::from(-84.0));
+      assert_eq!(-2 * Size::from(-42.0), Size::from( 84.0));
+      assert_eq!( 1.5 * Size::from( 42.0), Size::from( 63.0));
+      assert_eq!(-1.5 * Size::from( 42.0), Size::from(-63.0));
+      assert_eq!( 1.5 * Size::from(-42.0), Size::from(-63.0));
+      assert_eq!(-1.5 * Size::from(-42.0), Size::from( 63.0));
 
-      assert_eq!(Size( 42.0) /  2, Size( 21.0));
-      assert_eq!(Size( 42.0) / -2, Size(-21.0));
-      assert_eq!(Size(-42.0) /  2, Size(-21.0));
-      assert_eq!(Size(-42.0) / -2, Size( 21.0));
-      assert_eq!(Size( 42.0) /  1.5, Size( 28.0));
-      assert_eq!(Size( 42.0) / -1.5, Size(-28.0));
-      assert_eq!(Size(-42.0) /  1.5, Size(-28.0));
-      assert_eq!(Size(-42.0) / -1.5, Size( 28.0));
+      assert_eq!(Size::from( 42.0) /  2, Size::from( 21.0));
+      assert_eq!(Size::from( 42.0) / -2, Size::from(-21.0));
+      assert_eq!(Size::from(-42.0) /  2, Size::from(-21.0));
+      assert_eq!(Size::from(-42.0) / -2, Size::from( 21.0));
+      assert_eq!(Size::from( 42.0) /  1.5, Size::from( 28.0));
+      assert_eq!(Size::from( 42.0) / -1.5, Size::from(-28.0));
+      assert_eq!(Size::from(-42.0) /  1.5, Size::from(-28.0));
+      assert_eq!(Size::from(-42.0) / -1.5, Size::from( 28.0));
 
-      assert_eq!(Size( 42.0) / Size( 1.5),  28.0);
-      assert_eq!(Size( 42.0) / Size(-1.5), -28.0);
-      assert_eq!(Size(-42.0) / Size( 1.5), -28.0);
-      assert_eq!(Size(-42.0) / Size(-1.5),  28.0);
+      assert_eq!(Size::from( 42.0) / Size::from( 1.5), n64( 28.0));
+      assert_eq!(Size::from( 42.0) / Size::from(-1.5), n64(-28.0));
+      assert_eq!(Size::from(-42.0) / Size::from( 1.5), n64(-28.0));
+      assert_eq!(Size::from(-42.0) / Size::from(-1.5), n64( 28.0));
 
-      assert_eq!(-Size(42.0), Size(-42.0));
+      assert_eq!(-Size::from(42.0), Size::from(-42.0));
 
-      assert!(Size(42.0) > Size(41.0));
-      assert!(Size(41.0) < Size(42.0));
+      assert!(Size::from(42.0) > Size::from(41.0));
+      assert!(Size::from(41.0) < Size::from(42.0));
 
       assert_eq!(
-         Size(42.0).partial_cmp(&Size(f64::NAN)),
-         None
-      );
-      assert_eq!(
-         Size(f64::NAN).partial_cmp(&Size(42.0)),
-         None
-      );
-      assert_eq!(
-         Size(f64::NAN).partial_cmp(&Size(f64::NAN)),
-         None
-      );
-      assert_eq!(
-         Size(42.0).partial_cmp(&Size(42.0)),
+         Size::from(42.0).partial_cmp(&Size::from(42.0)),
          Some(Ordering::Equal)
       );
       assert_eq!(
-         Size(42.0).partial_cmp(&Size(42.0 + 1e-12)),
+         Size::from(42.0).partial_cmp(&Size::from(42.0 + 1e-12)),
          Some(Ordering::Equal)
       );
       assert_eq!(
-         Size(42.0).partial_cmp(&Size(42.0 - 1e-12)),
+         Size::from(42.0).partial_cmp(&Size::from(42.0 - 1e-12)),
          Some(Ordering::Equal)
+      );
+      assert_eq!(
+         Size::from(42.0).cmp(&Size::from(42.0)),
+         Ordering::Equal
+      );
+      assert_eq!(
+         Size::from(42.0).cmp(&Size::from(42.0 + 1e-12)),
+         Ordering::Equal
+      );
+      assert_eq!(
+         Size::from(42.0).cmp(&Size::from(42.0 - 1e-12)),
+         Ordering::Equal
       );
    }
 
@@ -404,9 +423,9 @@ mod tests {
    fn sum() {
       let sum: Size = (1..=10)
          .into_iter()
-         .map(|i| Size(i as f64))
+         .map(|i| Size::from(i))
          .sum();
 
-      assert_eq!(sum, Size(55.0));
+      assert_eq!(sum, Size::from(55.0));
    }
 }

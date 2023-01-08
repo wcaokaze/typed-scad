@@ -1,8 +1,10 @@
 use crate::math::Matrix;
-use crate::math::rough_fp::rough_partial_eq;
+use crate::math::conversion::ToN64;
+use crate::math::rough_fp::rough_eq;
 use std::iter::Sum;
 use std::marker::PhantomData;
 use std::ops::{Add, Div, Mul, MulAssign, Neg, Sub};
+use noisy_float::prelude::*;
 
 /// Type which has a value as some unit.
 ///
@@ -47,7 +49,7 @@ pub struct DerivedUnit<
    U: Unit = Exp<!, 0>,
    V: Unit = Exp<!, 0>,
 >(
-   pub f64,
+   pub N64,
    PhantomData<A>,
    PhantomData<B>,
    PhantomData<C>,
@@ -97,7 +99,7 @@ impl<
    ///    //               ^^^^^^^^^^^^^^^^^^^^ THIS IS SIZE, NOT SIZE*ANGLE
    /// };
    /// ```
-   pub unsafe fn new(value: f64)
+   pub unsafe fn new(value: N64)
       -> DerivedUnit<
          A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V,
       >
@@ -127,7 +129,7 @@ impl<
 /// exponentiation of unit. e.g. `Exp<Size, 2>` for mm².
 /// See also [DerivedUnit].
 #[derive(Clone, Copy, Debug, Default)]
-pub struct ExponentialUnit<U: Unit, const N: i32>(pub f64, PhantomData<U>);
+pub struct ExponentialUnit<U: Unit, const N: i32>(pub N64, PhantomData<U>);
 pub type Exp<U, const N: i32> = ExponentialUnit<U, N>;
 
 impl<U: Unit, const N: i32> ExponentialUnit<U, N> {
@@ -135,6 +137,7 @@ impl<U: Unit, const N: i32> ExponentialUnit<U, N> {
    ///
    /// Be careful about type arguments.
    /// ```
+   /// # use noisy_float::prelude::*;
    /// # use typed_scad::geometry::{Size, SizeLiteral};
    /// # use typed_scad::math::unit::Exp;
    /// let size = 42.mm();
@@ -146,7 +149,7 @@ impl<U: Unit, const N: i32> ExponentialUnit<U, N> {
    ///    //       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ THIS IS SIZE², NOT SIZE³
    /// };
    /// ```
-   pub unsafe fn new(value: f64) -> ExponentialUnit<U, N> {
+   pub unsafe fn new(value: N64) -> ExponentialUnit<U, N> {
       ExponentialUnit(value, PhantomData)
    }
 
@@ -161,9 +164,11 @@ impl<U: Unit, const N: i32> Unit for Exp<U, N> {}
 
 impl<U: Unit, const N: i32> PartialEq for Exp<U, N> {
    fn eq(&self, other: &Self) -> bool {
-      rough_partial_eq(self.0, other.0)
+      rough_eq(self.0, other.0)
    }
 }
+
+impl<U: Unit, const N: i32> Eq for Exp<U, N> {}
 
 impl<U: Unit, const N: i32> Add for Exp<U, N> where U: Add {
    type Output = Exp<U, N>;
@@ -184,7 +189,7 @@ macro_rules! mul {
       impl<U: Unit, const N: i32> Mul<$t> for Exp<U, N> where U: Mul<$t> {
          type Output = Exp<U, N>;
          fn mul(self, rhs: $t) -> Exp<U, N> {
-            unsafe { Exp::new(self.0 * rhs as f64) }
+            unsafe { Exp::new(self.0 * rhs.to_n64()) }
          }
       }
 
@@ -206,7 +211,8 @@ macro_rules! mul {
    )+)
 }
 
-mul!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64);
+mul!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64,
+   N32, N64, R32, R64);
 
 impl<U: Unit, const NA: i32, const NB: i32>
    Mul<Exp<U, NB>> for Exp<U, NA>
@@ -258,37 +264,40 @@ impl<U: Unit, Rhs: Unit, const L: i32, const M: usize, const N: usize>
 
 #[cfg(test)]
 mod tests {
+   use noisy_float::prelude::*;
    use crate::geometry::Size;
    use super::{DerivedUnit, Exp};
 
    #[test]
    fn instantiate_and_get() {
-      let derived_unit: DerivedUnit<Size> = unsafe { DerivedUnit::new(42.0) };
+      let derived_unit: DerivedUnit<Size> = unsafe {
+         DerivedUnit::new(n64(42.0))
+      };
       assert_eq!(derived_unit.0, 42.0);
 
-      let exp: Exp<Size, 2> = unsafe { Exp::new(42.0) };
+      let exp: Exp<Size, 2> = unsafe { Exp::new(n64(42.0)) };
       assert_eq!(exp.0, 42.0);
    }
 
    #[test]
    fn exp_operators() {
-      let a: Exp<Size, 3> = unsafe { Exp::new(1.0) };
-      let b: Exp<Size, 3> = unsafe { Exp::new(4.0) };
+      let a: Exp<Size, 3> = unsafe { Exp::new(n64(1.0)) };
+      let b: Exp<Size, 3> = unsafe { Exp::new(n64(4.0)) };
       let c: Exp<Size, 3> = a + b;
       assert_eq!(c.0, 5.0);
 
-      let a: Exp<Size, 3> = unsafe { Exp::new(5.0) };
-      let b: Exp<Size, 3> = unsafe { Exp::new(4.0) };
+      let a: Exp<Size, 3> = unsafe { Exp::new(n64(5.0)) };
+      let b: Exp<Size, 3> = unsafe { Exp::new(n64(4.0)) };
       let c: Exp<Size, 3> = a - b;
       assert_eq!(c.0, 1.0);
 
-      let a: Exp<Size, 3> = unsafe { Exp::new(2.0) };
-      let b: Exp<Size, 4> = unsafe { Exp::new(5.0) };
+      let a: Exp<Size, 3> = unsafe { Exp::new(n64(2.0)) };
+      let b: Exp<Size, 4> = unsafe { Exp::new(n64(5.0)) };
       let c: Exp<Size, 7> = a * b;
       assert_eq!(c.0, 10.0);
 
-      let a: Exp<Size, 7> = unsafe { Exp::new(10.0) };
-      let b: Exp<Size, 4> = unsafe { Exp::new(5.0) };
+      let a: Exp<Size, 7> = unsafe { Exp::new(n64(10.0)) };
+      let b: Exp<Size, 4> = unsafe { Exp::new(n64(5.0)) };
       let c: Exp<Size, 3> = a / b;
       assert_eq!(c.0, 2.0);
    }

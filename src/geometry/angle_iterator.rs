@@ -15,14 +15,14 @@ fn angle_count(start: Angle, end: Angle, step: Angle) -> usize {
          0
       } else {
          ((end.0 - FLOAT_POINT_ALLOWABLE_ERROR - start.0) / step.0)
-            as usize + 1
+            .raw() as usize + 1
       }
    } else {
       if step > 0.rad() {
          0
       } else {
          ((end.0 + FLOAT_POINT_ALLOWABLE_ERROR - start.0) / step.0)
-            as usize + 1
+            .raw() as usize + 1
       }
    }
 }
@@ -51,14 +51,14 @@ fn angle_count_inclusive(start: Angle, end: Angle, step: Angle) -> usize {
          0
       } else {
          ((end.0 + FLOAT_POINT_ALLOWABLE_ERROR - start.0) / step.0)
-            as usize + 1
+            .raw() as usize + 1
       }
    } else {
       if step > 0.rad() {
          0
       } else {
          ((end.0 - FLOAT_POINT_ALLOWABLE_ERROR - start.0) / step.0)
-            as usize + 1
+            .raw() as usize + 1
       }
    }
 }

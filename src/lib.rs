@@ -2,6 +2,7 @@
 
 pub mod geometry;
 pub mod math;
+pub mod prelude;
 pub mod solid;
 pub mod stl;
 pub mod transform;
